@@ -5475,7 +5475,16 @@ function SavedTab(props){
       allPoints.push({study:found2,point:pt});
     });
   }
-  var isEmpty=studyMeta.length===0&&savedCardObjs.length===0&&savedKnockObjs.length===0&&savedWordObjs.length===0&&notesEntries.length===0&&allPoints.length===0;
+  var savedQuotesList=[];
+  if(props.savedQuotes){props.savedQuotes.forEach(function(key){
+    var parts=key.split(":");
+    var type=parts[0],dossierId=parts[1],idx=parseInt(parts[2]);
+    var dossier=WT_DOSSIERS.find(function(d){return d.id===dossierId;});
+    if(!dossier)return;
+    if(type==="q"&&dossier.quotes[idx])savedQuotesList.push({type:"quote",key:key,dossier:dossier,item:dossier.quotes[idx]});
+    else if(type==="d"&&dossier.deflections[idx])savedQuotesList.push({type:"deflection",key:key,dossier:dossier,item:dossier.deflections[idx]});
+  });}
+  var isEmpty=studyMeta.length===0&&savedCardObjs.length===0&&savedKnockObjs.length===0&&savedWordObjs.length===0&&notesEntries.length===0&&allPoints.length===0&&savedQuotesList.length===0;
 
   var hasNotes=notesEntries.length>0||allPoints.length>0;
   function exportNotes(){
@@ -5605,6 +5614,40 @@ function SavedTab(props){
                 marginTop:2}},w.translit)
             ),
             ce("span",{style:{color:T.dim,fontSize:".9rem"}},"›")
+          );
+        })
+      ),
+      savedQuotesList.length>0&&ce("div",{style:{marginBottom:18}},
+        ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.gold,fontSize:".6rem",fontWeight:600,
+          letterSpacing:".15em",textTransform:"uppercase",marginBottom:8}},"Saved from Their Own Words"),
+        savedQuotesList.map(function(sq){
+          var isQuote=sq.type==="quote";
+          var col=sq.dossier.col||"#C0392B";
+          return ce("div",{key:sq.key,style:{marginBottom:10,background:T.bg2,borderRadius:12,
+            border:"1px solid "+T.border,borderLeft:"3px solid "+col,overflow:"hidden"}},
+            ce("div",{style:{padding:"10px 12px 8px"}},
+              ce("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}},
+                ce("span",{style:{fontSize:".55rem",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",
+                  color:col,fontFamily:"'DM Sans',sans-serif"}},
+                  sq.dossier.title+" · "+(isQuote?"Quote":"Response")),
+                ce("button",{onClick:function(){props.onToggleSavedQuote(sq.key);},
+                  title:"Remove",
+                  style:{background:"none",border:"none",cursor:"pointer",color:T.gold,padding:2,fontSize:"1rem",lineHeight:1}},
+                  ce("svg",{width:13,height:13,viewBox:"0 0 24 24",fill:"currentColor",stroke:"currentColor",strokeWidth:2},
+                    ce("path",{d:"M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"})))
+              ),
+              isQuote
+                ?ce(React.Fragment,null,
+                    ce("p",{style:{fontFamily:"'Crimson Pro',Georgia,serif",fontSize:".95rem",color:T.text,
+                      lineHeight:1.6,marginBottom:6,fontStyle:"italic"}},"“"+sq.item.text+"”"),
+                    ce("p",{style:{fontFamily:"'DM Sans',sans-serif",fontSize:".65rem",color:T.dim}},
+                      sq.item.source+(sq.item.date?", "+sq.item.date:"")+(sq.item.page?" · "+sq.item.page:"")))
+                :ce(React.Fragment,null,
+                    ce("p",{style:{fontFamily:"'DM Sans',sans-serif",fontSize:".7rem",fontWeight:600,
+                      color:"#C0392B",marginBottom:4}},"“"+sq.item.say+"”"),
+                    ce("p",{style:{fontFamily:"'DM Sans',sans-serif",fontSize:".82rem",color:T.soft,
+                      lineHeight:1.5}},sq.item.reply))
+            )
           );
         })
       ),
@@ -6527,9 +6570,21 @@ function DoorstepSheet(props){
 /* ═══ Their Own Words — WT Dossier components ═══ */
 function DossierSheet(props){
   var T=props.T,d=props.dossier;
+  var savedQuotes=props.savedQuotes||new Set();
+  var onToggle=props.onToggleSavedQuote||function(){};
   function copyText(txt){
     if(navigator.clipboard){navigator.clipboard.writeText(txt);}
     else{var el=document.createElement("textarea");el.value=txt;document.body.appendChild(el);el.select();document.execCommand("copy");document.body.removeChild(el);}
+  }
+  function BookmarkBtn(key){
+    var saved=savedQuotes.has(key);
+    return ce("button",{onClick:function(e){e.stopPropagation();onToggle(key);},
+      title:saved?"Remove from saved":"Save",
+      style:{background:"none",border:"none",cursor:"pointer",padding:"4px",
+        color:saved?T.gold:T.dim,flexShrink:0}},
+      ce("svg",{width:14,height:14,viewBox:"0 0 24 24",fill:saved?"currentColor":"none",
+        stroke:"currentColor",strokeWidth:2},
+        ce("path",{d:"M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"})));
   }
   return ce(React.Fragment,null,
     ce("div",{onClick:props.onClose,style:{position:"fixed",inset:0,background:"rgba(0,0,0,.55)",zIndex:400}}),
@@ -6583,7 +6638,8 @@ function DossierSheet(props){
                   ce("p",{style:{fontFamily:"'DM Sans',sans-serif",fontSize:".65rem",color:T.dim}},
                     q.date+(q.page?" · "+q.page:""))
                 ),
-                ce("div",{style:{display:"flex",gap:6}},
+                ce("div",{style:{display:"flex",gap:6,alignItems:"center"}},
+                  BookmarkBtn("q:"+d.id+":"+qi),
                   q.url&&ce("a",{href:q.url,target:"_blank",rel:"noopener noreferrer",
                     style:{fontSize:".65rem",color:T.blue,fontFamily:"'DM Sans',sans-serif",
                       textDecoration:"none",padding:"4px 9px",borderRadius:6,
@@ -6605,12 +6661,20 @@ function DossierSheet(props){
               color:T.dim,fontFamily:"'DM Sans',sans-serif"}},"When they push back")
           ),
           d.deflections.map(function(df,i){
+            var dkey="d:"+d.id+":"+i;
             return ce("div",{key:i,style:{margin:"0 14px 10px",background:T.bg2,borderRadius:12,
               border:"1px solid "+T.border,padding:"12px 14px"}},
               ce("p",{style:{fontFamily:"'DM Sans',sans-serif",fontSize:".7rem",fontWeight:600,
-                color:"#C0392B",marginBottom:5}},"“"+df.say+"”"),
+                color:"#C0392B",margin:"0 0 6px"}},"“"+df.say+"”"),
               ce("p",{style:{fontFamily:"'DM Sans',sans-serif",fontSize:".82rem",color:T.soft,
-                lineHeight:1.55}},df.reply)
+                lineHeight:1.55,marginBottom:8}},df.reply),
+              ce("div",{style:{display:"flex",justifyContent:"flex-end",gap:6}},
+                ce("button",{onClick:function(){copyText(df.reply);},
+                  style:{padding:"5px 10px",borderRadius:6,background:"none",
+                    border:"1px solid "+T.border,color:T.dim,
+                    fontFamily:"'DM Sans',sans-serif",fontSize:".72rem",cursor:"pointer"}},"Copy"),
+                BookmarkBtn(dkey)
+              )
             );
           })
         ),
@@ -6677,7 +6741,42 @@ function QuotesTab(props){
         );
       })
     ),
-    openDossier&&ce(DossierSheet,{T:T,dossier:openDossier,onClose:function(){setOpenDossier(null);}})
+    openDossier&&ce(DossierSheet,{T:T,dossier:openDossier,savedQuotes:props.savedQuotes,onToggleSavedQuote:props.onToggleSavedQuote,onClose:function(){setOpenDossier(null);}})
+  );
+}
+
+/* ═══ Save-to-contact prompt modal ═══ */
+function SavePromptModal(props){
+  var T=props.T,contacts=props.contacts;
+  return ce("div",{style:{position:"fixed",inset:0,zIndex:200,display:"flex",alignItems:"flex-end",justifyContent:"center"}},
+    ce("div",{onClick:props.onCancel,style:{position:"absolute",inset:0,background:"rgba(0,0,0,.55)"}}),
+    ce("div",{style:{position:"relative",width:"100%",maxWidth:430,background:T.bg2,
+      borderRadius:"20px 20px 0 0",padding:"24px 20px calc(28px + env(safe-area-inset-bottom,0px))",
+      boxShadow:"0 -4px 32px rgba(0,0,0,.3)"}},
+      ce("p",{style:{fontFamily:"'Playfair Display',serif",fontSize:"1.1rem",color:T.text,
+        fontWeight:700,margin:"0 0 6px"}},"Save this item"),
+      ce("p",{style:{fontFamily:"'DM Sans',sans-serif",fontSize:".82rem",color:T.dim,margin:"0 0 20px",lineHeight:1.5}},
+        "Save as a general note, or link it to a contact as preparation material."),
+      ce("button",{onClick:function(){props.onChoose(null);},
+        style:{width:"100%",textAlign:"left",padding:"13px 15px",background:T.bg,
+          border:"1px solid "+T.border,borderRadius:11,marginBottom:9,cursor:"pointer",
+          fontFamily:"'DM Sans',sans-serif",color:T.text,fontSize:".9rem",fontWeight:500,
+          display:"flex",alignItems:"center",gap:10}},
+        ce("span",{style:{color:T.gold,fontSize:"1rem"}},"◇"),
+        "General note"),
+      contacts.map(function(c){
+        return ce("button",{key:c.id,onClick:function(){props.onChoose(c.id);},
+          style:{width:"100%",textAlign:"left",padding:"13px 15px",background:T.bg,
+            border:"1px solid "+T.border,borderRadius:11,marginBottom:9,cursor:"pointer",
+            fontFamily:"'DM Sans',sans-serif",color:T.text,fontSize:".9rem",fontWeight:500,
+            display:"flex",alignItems:"center",gap:10}},
+          ce("span",{style:{color:T.teal,fontSize:"1rem"}},"○"),
+          "Prep notes for "+c.name);
+      }),
+      ce("button",{onClick:props.onCancel,
+        style:{width:"100%",padding:"10px",marginTop:2,background:"none",border:"none",
+          color:T.dim,fontFamily:"'DM Sans',sans-serif",fontSize:".85rem",cursor:"pointer"}},"Cancel")
+    )
   );
 }
 
@@ -6689,7 +6788,6 @@ function TabBar(props){
     {id:"cards",label:"Cards",icon:"\u29c9"},
     {id:"locker",label:"Locker",icon:"\u29c8"},
     {id:"words",label:"Words",icon:"\u03bb"},
-    {id:"saved",label:"Saved",icon:"\u25c7"},
     {id:"quotes",label:"Quotes",icon:"\u201c\u201d"},
     {id:"journal",label:"Journal",icon:"\u25a6"},
     {id:"settings",label:"Settings",icon:"\u2699"}
@@ -6700,7 +6798,7 @@ function TabBar(props){
     display:"flex",padding:"8px 4px calc(8px + env(safe-area-inset-bottom,0px))",zIndex:50}},
     tabs.map(function(t){
       var on=props.active===t.id;
-      var badge=t.id==="saved"&&props.savedCount>0;
+      var badge=t.id==="journal"&&props.savedCount>0;
       return ce("button",{key:t.id,onClick:function(){props.onChange(t.id);},
         style:{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,
           background:"none",border:"none",padding:"5px 0",position:"relative"}},
@@ -7547,10 +7645,175 @@ function JournalTab(props){
       onEdit:function(f){updateContact(contact.id,f);},
       onDelete:function(){deleteContact(contact.id);},
       onAddVisit:function(){addVisit(contact.id);},
-      onOpenVisit:function(vid){setView({mode:"visit",contactId:contact.id,visitId:vid});}});
+      onOpenVisit:function(vid){setView({mode:"visit",contactId:contact.id,visitId:vid});},
+      savedStudies:props.savedStudies,savedCards:props.savedCards,savedKnocks:props.savedKnocks,
+      savedWords:props.savedWords,savedQuotes:props.savedQuotes,savedAssignments:props.savedAssignments||{},
+      notesByStudy:props.notesByStudy,pointsByStudy:props.pointsByStudy,
+      onToggleSavedQuote:props.onToggleSavedQuote,
+      onOpenStudy:props.onOpenStudy,onOpenCard:props.onOpenCard,
+      onOpenKnock:props.onOpenKnock,onOpenWord:props.onOpenWord});
   }
   return ce(JournalContactList,{T:T,contacts:journal.contacts,onAdd:addContact,
-    onOpen:function(cid){setView({mode:"contact",contactId:cid});}});
+    onOpen:function(cid){setView({mode:"contact",contactId:cid});},
+    savedStudies:props.savedStudies,savedCards:props.savedCards,savedKnocks:props.savedKnocks,
+    savedWords:props.savedWords,savedQuotes:props.savedQuotes,savedAssignments:props.savedAssignments||{},
+    notesByStudy:props.notesByStudy,pointsByStudy:props.pointsByStudy,
+    onToggleSavedQuote:props.onToggleSavedQuote,
+    onOpenStudy:props.onOpenStudy,onOpenCard:props.onOpenCard,
+    onOpenKnock:props.onOpenKnock,onOpenWord:props.onOpenWord});
+}
+
+function JournalSavedSection(props){
+  var T=props.T;
+  var contactId=props.contactId||null;
+  var asgn=props.savedAssignments||{};
+  var contacts=props.contacts||[];
+  function assignedTo(type,key){return asgn[type+":"+key]||null;}
+  function show(type,key){
+    var a=assignedTo(type,key);
+    if(contactId!==undefined){
+      if(contactId===null)return a===null||a===undefined;
+      return a===contactId;
+    }
+    return true;
+  }
+  var studyMeta=[];
+  (props.savedStudies?SECTIONS:[]).forEach(function(sec){
+    sec.studies.forEach(function(s){
+      if(props.savedStudies&&props.savedStudies.has(s.id)&&show("study",s.id))studyMeta.push({study:s,sec:sec});
+    });
+  });
+  var savedCardObjs=(props.savedCards?CARDS:[]).filter(function(c){return props.savedCards&&props.savedCards.has(c.id)&&show("card",c.id);});
+  var savedKnockObjs=(props.savedKnocks?ALL_KNOCKS:[]).filter(function(k){return props.savedKnocks&&props.savedKnocks.has(k.id)&&show("knock",k.id);});
+  var savedWordObjs=(props.savedWords?WORD_STUDIES:[]).filter(function(w){return props.savedWords&&props.savedWords.has(w.id)&&show("word",w.id);});
+  var savedQuotesList=[];
+  if(props.savedQuotes){props.savedQuotes.forEach(function(key){
+    if(!show("quote",key))return;
+    var parts=key.split(":");
+    var type=parts[0],dossierId=parts[1],idx=parseInt(parts[2]);
+    var dossier=WT_DOSSIERS.find(function(d){return d.id===dossierId;});
+    if(!dossier)return;
+    if(type==="q"&&dossier.quotes[idx])savedQuotesList.push({type:"quote",key:key,dossier:dossier,item:dossier.quotes[idx]});
+    else if(type==="d"&&dossier.deflections[idx])savedQuotesList.push({type:"deflection",key:key,dossier:dossier,item:dossier.deflections[idx]});
+  });}
+  var notesEntries=[];
+  for(var k in (props.notesByStudy||{})){
+    if(props.notesByStudy[k]&&props.notesByStudy[k].trim().length>0){
+      var found=null;
+      SECTIONS.forEach(function(sec){sec.studies.forEach(function(s){if(s.id===k)found=s;});});
+      if(found)notesEntries.push({study:found,note:props.notesByStudy[k]});
+    }
+  }
+  var allPoints=[];
+  for(var pk in (props.pointsByStudy||{})){
+    var found2=null;
+    SECTIONS.forEach(function(sec){sec.studies.forEach(function(s){if(s.id===pk)found2=s;});});
+    if(!found2){var fw=WORD_STUDIES.find(function(w){return w.id===pk;});if(fw)found2={id:fw.id,title:fw.word+" · "+fw.translit};}
+    (props.pointsByStudy[pk]||[]).forEach(function(pt){allPoints.push({study:found2,point:pt});});
+  }
+  var total=studyMeta.length+savedCardObjs.length+savedKnockObjs.length+savedWordObjs.length+savedQuotesList.length+notesEntries.length+allPoints.length;
+  if(total===0)return null;
+  var labelS={fontFamily:"'DM Sans',sans-serif",color:T.gold,fontSize:".6rem",fontWeight:600,
+    letterSpacing:".15em",textTransform:"uppercase",marginBottom:8,marginTop:0};
+  var sectionPad={padding:"14px 16px 4px"};
+  return ce("div",{style:{borderTop:"1px solid "+T.border,marginTop:8}},
+    contactId===null&&!props.hideHeader&&ce("div",{style:{padding:"18px 16px 4px"}},
+      ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.dim,fontSize:".72rem",fontWeight:600,
+        letterSpacing:".12em",textTransform:"uppercase"}},"General saves")),
+    ce("div",{style:{padding:"4px 16px 20px"}},
+      studyMeta.length>0&&ce("div",{style:{marginBottom:14}},
+        ce("p",{style:labelS},"Studies"),
+        studyMeta.map(function(m){
+          var sc=T.sections[m.sec.id]||{col:T.gold};
+          return ce("button",{key:m.study.id,onClick:function(){props.onOpenStudy&&props.onOpenStudy(m.sec,m.study);},
+            style:{width:"100%",textAlign:"left",display:"flex",alignItems:"center",gap:10,
+              padding:"11px 13px",background:T.bg2,borderRadius:11,border:"1px solid "+T.border,
+              borderLeft:"3px solid "+sc.col,marginBottom:7,color:T.text,cursor:"pointer"}},
+            ce("div",{style:{flex:1}},
+              ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:sc.col,fontSize:".58rem",fontWeight:600,letterSpacing:".08em",textTransform:"uppercase",marginBottom:3}},m.sec.label),
+              ce("p",{style:{fontFamily:"'Playfair Display',serif",color:T.text,fontWeight:700,fontSize:".9rem",lineHeight:1.2}},m.study.title)),
+            ce("span",{style:{color:T.dim,fontSize:".9rem"}},"›"));
+        })),
+      savedCardObjs.length>0&&ce("div",{style:{marginBottom:14}},
+        ce("p",{style:labelS},"Cards"),
+        savedCardObjs.map(function(c){
+          var col=T[c.col];
+          return ce("button",{key:c.id,onClick:function(){props.onOpenCard&&props.onOpenCard(c);},
+            style:{width:"100%",textAlign:"left",display:"flex",alignItems:"center",gap:10,
+              padding:"11px 13px",background:T.bg2,borderRadius:11,border:"1px solid "+T.border,
+              borderLeft:"3px solid "+col,marginBottom:7,color:T.text,cursor:"pointer"}},
+            ce("div",{style:{flex:1}},
+              ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:col,fontSize:".58rem",fontWeight:600,letterSpacing:".08em",textTransform:"uppercase",marginBottom:3}},c.cat),
+              ce("p",{style:{fontFamily:"'Playfair Display',serif",color:T.text,fontWeight:700,fontSize:".9rem",lineHeight:1.2}},c.title)),
+            ce("span",{style:{color:T.dim,fontSize:".9rem"}},"›"));
+        })),
+      savedKnockObjs.length>0&&ce("div",{style:{marginBottom:14}},
+        ce("p",{style:labelS},"Evidence Locker"),
+        savedKnockObjs.map(function(k){
+          var col=lockerCatColor(T,k.cat);
+          return ce("button",{key:k.id,onClick:function(){props.onOpenKnock&&props.onOpenKnock(k);},
+            style:{width:"100%",textAlign:"left",display:"flex",alignItems:"center",gap:10,
+              padding:"11px 13px",background:T.bg2,borderRadius:11,border:"1px solid "+T.border,
+              borderLeft:"3px solid "+col,marginBottom:7,color:T.text,cursor:"pointer"}},
+            ce("div",{style:{flex:1}},
+              ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:col,fontSize:".58rem",fontWeight:600,letterSpacing:".08em",textTransform:"uppercase",marginBottom:3}},k.cat),
+              ce("p",{style:{fontFamily:"'Playfair Display',serif",color:T.text,fontWeight:700,fontSize:".9rem",lineHeight:1.2}},k.title)),
+            ce("span",{style:{color:T.dim,fontSize:".9rem"}},"›"));
+        })),
+      savedWordObjs.length>0&&ce("div",{style:{marginBottom:14}},
+        ce("p",{style:labelS},"Word studies"),
+        savedWordObjs.map(function(w){
+          return ce("button",{key:w.id,onClick:function(){props.onOpenWord&&props.onOpenWord(w);},
+            style:{width:"100%",textAlign:"left",display:"flex",alignItems:"center",gap:10,
+              padding:"11px 13px",background:T.bg2,borderRadius:11,border:"1px solid "+T.border,
+              borderLeft:"3px solid "+T.teal,marginBottom:7,color:T.text,cursor:"pointer"}},
+            ce("div",{style:{flex:1}},
+              ce("p",{style:{fontFamily:"'JetBrains Mono',monospace",color:T.teal,fontSize:".58rem",fontWeight:600,letterSpacing:".08em",textTransform:"uppercase",marginBottom:3}},w.lang),
+              ce("p",{style:{fontFamily:"'Crimson Pro',Georgia,serif",color:T.text,fontWeight:700,fontSize:"1.05rem",fontStyle:"italic",lineHeight:1.2}},w.word),
+              ce("p",{style:{fontFamily:"'JetBrains Mono',monospace",color:T.dim,fontSize:".6rem",marginTop:2}},w.translit)),
+            ce("span",{style:{color:T.dim,fontSize:".9rem"}},"›"));
+        })),
+      savedQuotesList.length>0&&ce("div",{style:{marginBottom:14}},
+        ce("p",{style:labelS},"Their Own Words"),
+        savedQuotesList.map(function(sq){
+          var isQuote=sq.type==="quote";
+          var col=sq.dossier.col||"#C0392B";
+          return ce("div",{key:sq.key,style:{marginBottom:10,background:T.bg2,borderRadius:12,
+            border:"1px solid "+T.border,borderLeft:"3px solid "+col,overflow:"hidden"}},
+            ce("div",{style:{padding:"10px 12px 8px"}},
+              ce("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}},
+                ce("span",{style:{fontSize:".55rem",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:col,fontFamily:"'DM Sans',sans-serif"}},
+                  sq.dossier.title+" · "+(isQuote?"Quote":"Response")),
+                ce("button",{onClick:function(){props.onToggleSavedQuote&&props.onToggleSavedQuote(sq.key);},
+                  title:"Remove",style:{background:"none",border:"none",cursor:"pointer",color:T.gold,padding:2,fontSize:"1rem",lineHeight:1}},
+                  ce("svg",{width:13,height:13,viewBox:"0 0 24 24",fill:"currentColor",stroke:"currentColor",strokeWidth:2},
+                    ce("path",{d:"M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"})))),
+              isQuote
+                ?ce(React.Fragment,null,
+                    ce("p",{style:{fontFamily:"'Crimson Pro',Georgia,serif",fontSize:".95rem",color:T.text,lineHeight:1.6,marginBottom:6,fontStyle:"italic"}},"“"+sq.item.text+"”"),
+                    ce("p",{style:{fontFamily:"'DM Sans',sans-serif",fontSize:".65rem",color:T.dim}},sq.item.source+(sq.item.date?", "+sq.item.date:"")+(sq.item.page?" · "+sq.item.page:"")))
+                :ce(React.Fragment,null,
+                    ce("p",{style:{fontFamily:"'DM Sans',sans-serif",fontSize:".7rem",fontWeight:600,color:"#C0392B",marginBottom:4}},"“"+sq.item.say+"”"),
+                    ce("p",{style:{fontFamily:"'DM Sans',sans-serif",fontSize:".82rem",color:T.text,lineHeight:1.5}},sq.item.reply))));
+        })),
+      notesEntries.length>0&&ce("div",{style:{marginBottom:14}},
+        ce("p",{style:labelS},"Your notes"),
+        notesEntries.map(function(n,i){
+          return ce("div",{key:i,style:{padding:"11px 13px",borderRadius:11,background:T.bg2,border:"1px solid "+T.border,marginBottom:7}},
+            ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.dim,fontSize:".62rem",fontWeight:500,letterSpacing:".06em",textTransform:"uppercase",marginBottom:5}},n.study.title),
+            ce("p",{style:{fontFamily:"'Playfair Display',serif",fontStyle:"italic",color:T.text,fontSize:".88rem",lineHeight:1.65}},n.note));
+        })),
+      allPoints.length>0&&ce("div",null,
+        ce("p",{style:labelS},"Saved points"),
+        allPoints.map(function(ap,i){
+          return ce("div",{key:i,style:{padding:"11px 13px",borderRadius:11,background:T.bg2,border:"1px solid "+T.border,marginBottom:7}},
+            ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.dim,fontSize:".62rem",fontWeight:500,letterSpacing:".06em",textTransform:"uppercase",marginBottom:5}},(ap.study?ap.study.title+" · ":"")+ap.point.label),
+            ce("p",{style:{fontFamily:"'Playfair Display',serif",fontStyle:"italic",color:T.text,fontSize:".87rem",lineHeight:1.6,marginBottom:4}},ap.point.verse),
+            ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.dim,fontSize:".62rem",fontWeight:500,letterSpacing:".08em",textTransform:"uppercase",margin:ap.point.note?"0 0 7px":0}},ap.point.vref),
+            ap.point.note&&ap.point.note.trim().length>0&&ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.text,fontSize:".8rem",fontWeight:300,lineHeight:1.55,margin:0,padding:"7px 9px",background:T.isDark?"rgba(197,160,109,.06)":"rgba(122,90,32,.05)",borderRadius:7,borderLeft:"2px solid "+T.gold}},ap.point.note));
+        }))
+    )
+  );
 }
 
 function JournalContactList(props){
@@ -7593,6 +7856,14 @@ function JournalContactList(props){
       ce("button",{onClick:function(){setAdding(true);},
         style:{background:"none",border:"1px dashed "+T.border,borderRadius:20,padding:"8px 18px",
           color:T.gold,fontFamily:"'DM Sans',sans-serif",fontSize:".85rem",cursor:"pointer"}},"+ Add contact")):null,
+    props.savedStudies&&ce(JournalSavedSection,{T:T,
+      savedStudies:props.savedStudies,savedCards:props.savedCards,savedKnocks:props.savedKnocks,
+      savedWords:props.savedWords,savedQuotes:props.savedQuotes,savedAssignments:props.savedAssignments||{},
+      contacts:contacts,
+      notesByStudy:props.notesByStudy,pointsByStudy:props.pointsByStudy,
+      onToggleSavedQuote:props.onToggleSavedQuote,
+      onOpenStudy:props.onOpenStudy,onOpenCard:props.onOpenCard,
+      onOpenKnock:props.onOpenKnock,onOpenWord:props.onOpenWord}),
     adding?ce("div",{style:{padding:"16px",borderTop:"1px solid "+T.border,background:T.bg2+"44"}},
       ce("p",{style:{margin:"0 0 12px",fontWeight:600,color:T.text,fontFamily:"'DM Sans',sans-serif",fontSize:".9rem"}},"New contact"),
       ce("input",{ref:nameRef,
@@ -7695,7 +7966,18 @@ function JournalContactDetail(props){
           fontFamily:"'DM Sans',sans-serif",fontWeight:600,cursor:"pointer",fontSize:".9rem"}},"+ Log a visit"),
       ce("button",{onClick:function(){if(confirm("Delete "+contact.name+"? This cannot be undone."))props.onDelete();},
         style:{background:"none",border:"none",color:T.dim,fontFamily:"'DM Sans',sans-serif",
-          fontSize:".8rem",cursor:"pointer",marginLeft:16,textDecoration:"underline"}},"Delete contact")));
+          fontSize:".8rem",cursor:"pointer",marginLeft:16,textDecoration:"underline"}},"Delete contact")),
+    props.savedStudies&&ce("div",null,
+      ce("div",{style:{padding:"12px 16px 0"}},
+        ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.gold,fontSize:".62rem",fontWeight:600,
+          letterSpacing:".14em",textTransform:"uppercase",margin:0}},"Prep notes")),
+      ce(JournalSavedSection,{T:T,contactId:contact.id,hideHeader:true,
+        savedStudies:props.savedStudies,savedCards:props.savedCards,savedKnocks:props.savedKnocks,
+        savedWords:props.savedWords,savedQuotes:props.savedQuotes,savedAssignments:props.savedAssignments||{},
+        notesByStudy:props.notesByStudy,pointsByStudy:props.pointsByStudy,
+        onToggleSavedQuote:props.onToggleSavedQuote,
+        onOpenStudy:props.onOpenStudy,onOpenCard:props.onOpenCard,
+        onOpenKnock:props.onOpenKnock,onOpenWord:props.onOpenWord})));
 }
 
 function JournalVisitEditor(props){
@@ -7798,6 +8080,9 @@ function App(){
   var _savedCards=us(new Set()),savedCards=_savedCards[0],setSavedCards=_savedCards[1];
   var _savedKnocks=us(new Set()),savedKnocks=_savedKnocks[0],setSavedKnocks=_savedKnocks[1];
   var _savedWords=us(new Set()),savedWords=_savedWords[0],setSavedWords=_savedWords[1];
+  var _savedQuotes=us(new Set()),savedQuotes=_savedQuotes[0],setSavedQuotes=_savedQuotes[1];
+  var _savedAssignments=us({}),savedAssignments=_savedAssignments[0],setSavedAssignments=_savedAssignments[1];
+  var _pendingSave=us(null),pendingSave=_pendingSave[0],setPendingSave=_pendingSave[1];
   var _notesByStudy=us({}),notesByStudy=_notesByStudy[0],setNotesByStudy=_notesByStudy[1];
   var _pointsByStudy=us({}),pointsByStudy=_pointsByStudy[0],setPointsByStudy=_pointsByStudy[1];
   var _notesOpenFor=us(null),notesOpenFor=_notesOpenFor[0],setNotesOpenFor=_notesOpenFor[1];
@@ -7833,6 +8118,30 @@ function App(){
   function toggleSavedWord(id){
     setSavedWords(function(p){var n=new Set(p);if(n.has(id))n.delete(id);else n.add(id);return n;});
   }
+  function toggleSavedQuote(key){
+    setSavedQuotes(function(p){var n=new Set(p);if(n.has(key))n.delete(key);else n.add(key);return n;});
+  }
+  function requestSave(type,key,isAlreadySaved,doToggle){
+    if(isAlreadySaved||journal.contacts.length===0){doToggle();return;}
+    setPendingSave({type:type,key:key,doToggle:doToggle});
+  }
+  function confirmSave(contactId){
+    if(!pendingSave)return;
+    pendingSave.doToggle();
+    if(contactId){
+      setSavedAssignments(function(prev){
+        var n=Object.assign({},prev);
+        n[pendingSave.type+":"+pendingSave.key]=contactId;
+        return n;
+      });
+    }
+    setPendingSave(null);
+  }
+  function requestSavedStudy(id){requestSave("study",id,savedStudies.has(id),function(){toggleSavedStudy(id);});}
+  function requestSavedCard(id){requestSave("card",id,savedCards.has(id),function(){toggleSavedCard(id);});}
+  function requestSavedKnock(id){requestSave("knock",id,savedKnocks.has(id),function(){toggleSavedKnock(id);});}
+  function requestSavedWord(id){requestSave("word",id,savedWords.has(id),function(){toggleSavedWord(id);});}
+  function requestSavedQuote(key){requestSave("quote",key,savedQuotes.has(key),function(){toggleSavedQuote(key);});}
   function togglePoint(studyId,point){
     setPointsByStudy(function(p){
       var n={};for(var k in p)n[k]=p[k];
@@ -7867,7 +8176,7 @@ function App(){
   function backToHome(){setLibView({mode:"home"});}
   function backToSection(){setLibView({mode:"section",sec:libView.sec});}
 
-  var savedTotal=savedStudies.size+savedCards.size+savedKnocks.size+savedWords.size;
+  var savedTotal=savedStudies.size+savedCards.size+savedKnocks.size+savedWords.size+savedQuotes.size;
 
   var mainContent;
   if(tab==="door"){
@@ -7878,7 +8187,7 @@ function App(){
       mainContent=ce(StudyDetail,{T:T,study:libView.study,sec:libView.sec,apiKey:apiKey,
         savedStudies:savedStudies,notesByStudy:notesByStudy,pointsByStudy:pointsByStudy,
         onBack:libView.sec.studies.length>1?backToSection:backToHome,
-        onToggleSaved:toggleSavedStudy,onOpenNotes:function(id){setNotesOpenFor(id);},
+        onToggleSaved:requestSavedStudy,onOpenNotes:function(id){setNotesOpenFor(id);},
         onTogglePoint:togglePoint,onLens:function(k){setLens(k);},
         onOpenStudy:function(sec,study){openStudy(sec,study);}});
     }else if(libView.mode==="section"){
@@ -7891,14 +8200,14 @@ function App(){
   }else if(tab==="cards"){
     mainContent=cardOpen
       ?ce(CardDetail,{T:T,card:cardOpen,apiKey:apiKey,savedCards:savedCards,
-          onBack:function(){setCardOpen(null);},onToggleSaved:toggleSavedCard,
+          onBack:function(){setCardOpen(null);},onToggleSaved:requestSavedCard,
           onLens:function(k){setLens(k);},
           onOpenStudy:function(sec,study){setCardOpen(null);setTab("library");openStudy(sec,study);}})
       :ce(CardsTab,{T:T,onOpen:setCardOpen});
   }else if(tab==="locker"){
     mainContent=knockOpen
       ?ce(KnockDetail,{T:T,knock:knockOpen,apiKey:apiKey,savedKnocks:savedKnocks,
-          onBack:function(){setKnockOpen(null);},onToggleSaved:toggleSavedKnock,
+          onBack:function(){setKnockOpen(null);},onToggleSaved:requestSavedKnock,
           onOpenNotes:function(id){setNotesOpenFor(id);},
           hasNotes:(pointsByStudy[knockOpen.id]||[]).length>0||
             ((notesByStudy[knockOpen.id]||"").trim().length>0),
@@ -7910,28 +8219,28 @@ function App(){
             if(targetSec&&targetStudy){setTab("library");openStudy(targetSec,targetStudy);}
           }})
       :ce(EvidenceLockerTab,{T:T,onOpen:setKnockOpen});
-  }else if(tab==="saved"){
-    mainContent=ce(SavedTab,{T:T,savedStudies:savedStudies,savedCards:savedCards,
-      savedKnocks:savedKnocks,savedWords:savedWords,
+  }else if(tab==="quotes"){
+    mainContent=ce(QuotesTab,{T:T,savedQuotes:savedQuotes,onToggleSavedQuote:requestSavedQuote});
+  }else if(tab==="journal"){
+    mainContent=ce(JournalTab,{T:T,journal:journal,onSave:setJournal,
+      savedStudies:savedStudies,savedCards:savedCards,savedKnocks:savedKnocks,
+      savedWords:savedWords,savedQuotes:savedQuotes,savedAssignments:savedAssignments,
       notesByStudy:notesByStudy,pointsByStudy:pointsByStudy,
+      onToggleSavedQuote:requestSavedQuote,
       onOpenStudy:function(sec,study){setTab("library");openStudy(sec,study);},
       onOpenCard:function(card){setTab("cards");setCardOpen(card);},
       onOpenKnock:function(knock){setTab("locker");setKnockOpen(knock);},
       onOpenWord:function(w){setTab("words");setWordOpen(w);}});
-  }else if(tab==="quotes"){
-    mainContent=ce(QuotesTab,{T:T});
-  }else if(tab==="journal"){
-    mainContent=ce(JournalTab,{T:T,journal:journal,onSave:setJournal});
   }else if(tab==="words"){
     mainContent=wordOpen
-      ?ce(WordDetail,{T:T,word:wordOpen,apiKey:apiKey,savedWords:savedWords,onToggleSaved:toggleSavedWord,
+      ?ce(WordDetail,{T:T,word:wordOpen,apiKey:apiKey,savedWords:savedWords,onToggleSaved:requestSavedWord,
           notesByStudy:notesByStudy,pointsByStudy:pointsByStudy,
           onOpenNotes:function(id){setNotesOpenFor(id);},
           onTogglePoint:togglePoint,
           onOpen:function(w){setWordOpen(w);},
           onOpenStudy:function(sec,study){setTab("library");openStudy(sec,study);},
           onBack:function(){setWordOpen(null);}})
-      :ce(WordsTab,{T:T,savedWords:savedWords,onToggleSaved:toggleSavedWord,onOpen:function(w){setWordOpen(w);}});
+      :ce(WordsTab,{T:T,savedWords:savedWords,onToggleSaved:requestSavedWord,onOpen:function(w){setWordOpen(w);}});
   }else{
     mainContent=ce(SettingsTab,{T:T,apiKey:apiKey,isDark:isDark,
       onSaveKey:setApiKey,onToggleDark:function(){setIsDark(function(p){return !p;});}});
@@ -7973,6 +8282,8 @@ function App(){
       onOpenStudy:function(sec,study){setSearchOpen(false);setTab("library");openStudy(sec,study);},
       onOpenCard:function(card){setSearchOpen(false);setTab("cards");setCardOpen(card);},
       onOpenKnock:function(knock){setSearchOpen(false);setTab("locker");setKnockOpen(knock);}}),
+    pendingSave&&ce(SavePromptModal,{T:T,contacts:journal.contacts,
+      onChoose:confirmSave,onCancel:function(){setPendingSave(null);}}),
     notesOpenFor&&notesStudyMeta&&ce(NotesSheet,{T:T,study:notesStudyMeta,
       note:notesByStudy[notesOpenFor]||"",onNote:function(t){setNote(notesOpenFor,t);},
       points:pointsByStudy[notesOpenFor]||[],
