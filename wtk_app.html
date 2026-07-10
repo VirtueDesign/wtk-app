@@ -6661,15 +6661,20 @@ function DossierSheet(props){
               color:T.dim,fontFamily:"'DM Sans',sans-serif"}},"When they push back")
           ),
           d.deflections.map(function(df,i){
+            var dkey="d:"+d.id+":"+i;
             return ce("div",{key:i,style:{margin:"0 14px 10px",background:T.bg2,borderRadius:12,
               border:"1px solid "+T.border,padding:"12px 14px"}},
-              ce("div",{style:{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:6,marginBottom:5}},
-                ce("p",{style:{fontFamily:"'DM Sans',sans-serif",fontSize:".7rem",fontWeight:600,
-                  color:"#C0392B",margin:0}},"“"+df.say+"”"),
-                BookmarkBtn("d:"+d.id+":"+i)
-              ),
+              ce("p",{style:{fontFamily:"'DM Sans',sans-serif",fontSize:".7rem",fontWeight:600,
+                color:"#C0392B",margin:"0 0 6px"}},"“"+df.say+"”"),
               ce("p",{style:{fontFamily:"'DM Sans',sans-serif",fontSize:".82rem",color:T.soft,
-                lineHeight:1.55}},df.reply)
+                lineHeight:1.55,marginBottom:8}},df.reply),
+              ce("div",{style:{display:"flex",justifyContent:"flex-end",gap:6}},
+                ce("button",{onClick:function(){copyText(df.reply);},
+                  style:{padding:"5px 10px",borderRadius:6,background:"none",
+                    border:"1px solid "+T.border,color:T.dim,
+                    fontFamily:"'DM Sans',sans-serif",fontSize:".72rem",cursor:"pointer"}},"Copy"),
+                BookmarkBtn(dkey)
+              )
             );
           })
         ),
