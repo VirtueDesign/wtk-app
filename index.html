@@ -573,6 +573,7 @@ var SECTIONS=[
    {id:"sheep",sid:"watchtr",ref:"John 10:16 · Ephesians 2:14–16 · Galatians 3:28",title:"The Other Sheep",desc:"One flock, one shepherd — not two flocks with different shepherds and destinies"},
    {id:"household",sid:"watchtr",ref:"Matthew 24:45–51 · Luke 12:42–48 · 1 Corinthians 4:1–2",title:"Household",desc:"Jesus poses a question — the organisation gives itself the answer"},
    {id:"nwtchanges",sid:"watchtr",ref:"John 1:1 · John 8:58 · Luke 23:43",title:"The Translation That Changed Jesus",desc:"Six NWT Choices With No Manuscript Support"},
+   {id:"ancientwitness",sid:"watchtr",ref:"AD 33 → 325 · Ignatius · Melito · Megiddo",title:"The Ancient Witness",desc:"The Watchtower says Constantine invented the deity of Christ in 325. The answer is not speculation — it is stone, ink, and fire. A martyr's letters from AD 107, a bishop's Passover sermon, and a mosaic floor laid 95 years before Nicaea."},
    {id:"thetruth",sid:"watchtr",ref:"John 14:6 · Acts 4:12 · Galatians 1:8",title:"\"I Found the Truth\"",desc:"Jesus says he is the truth — with the definite article. Where does he say the organisation is?"},
    {id:"enthronement",sid:"watchtr",ref:"Acts 2:33\u201336 \u00b7 Psalm 2:7 \u00b7 Matthew 28:18",title:"The Enthronement",desc:"The Watchtower places Jesus' coronation in 1914. Every NT coronation text places it at the resurrection. These are not the same event \u2014 and the difference matters."}
   ]},
@@ -612,6 +613,7 @@ var SECTIONS=[
    {id:"grace2",sid:"seeking",ref:"Ephesians 2:8–9",title:"Grace — Is It Really Free?",desc:"The NT says salvation is not by works. If that is true, what happens to everything you have been doing? This study just reads the text."},
    {id:"finished2",sid:"seeking",ref:"John 19:30",title:"It Is Finished",desc:"Paid in full. If it is finished — what is still required of you? This study sits with that question without rushing to an answer."},
    {id:"kalos",sid:"seeking",ref:"John 10 · Ezekiel 34",title:"The Good Shepherd",desc:"Jehovah says in Ezekiel 34 that he himself will come to shepherd his scattered flock. Jesus says in John 10: I am that shepherd."},
+   {id:"wings",sid:"seeking",ref:"Psalm 91:4 · Ruth 2:12 · Malachi 4:2 · Matthew 23:37",title:"Under His Wings",desc:"In the Psalms, the wings of refuge belong to Jehovah alone. Jesus stood over Jerusalem and claimed them as his own. And a bleeding woman reached for the kanaph of his garment — the wings Malachi promised — and was healed."},
    {id:"jesusnames2",sid:"seeking",ref:"100 names and titles",title:"Who Is He, Really?",desc:"One hundred names and titles of Jesus. Not a list of roles. A portrait of a person. Spend time here without an agenda."},
    {id:"prayer",sid:"seeking",ref:"Hebrews 4:16 · Matthew 11:28–30 · Romans 8:15–16",title:"A Place to Begin",desc:"Come to me — not to an organisation, not through an institution, but to me"},
    {id:"ourfather",sid:"seeking",ref:"Matthew 6:9–13 · Romans 8:15 · Galatians 4:6",title:"Our Father",desc:"The Gospel Embedded in the Lord's Prayer"},
@@ -2355,6 +2357,62 @@ STUDY_CONTENT["jesustaught"]={
     {id:"jt8",label:"A Question Worth Sitting With",
      text:"Isaiah said: Jehovah will forgive. Jesus said: your sins are forgiven. Jeremiah pointed to a coming new covenant. Jesus said: this is my blood of the covenant. Ezekiel said: Jehovah himself will come and shepherd his people. Jesus said: I am the fine shepherd. The question worth sitting with is the one the crowds almost asked in Matthew 7: prophets are channels, and channels cite their source — so what kind of speaker needs no source to cite, because every word already comes from the top?"}
   ],related:["command","iamhe","kalos","household","fatherhour"]
+};
+
+STUDY_CONTENT["ancientwitness"]={
+  verse:{text:"In answer, Thomas said to him: “My Lord and my God!”",ref:"John 20:28 · NWT"},
+  sections:[
+    {id:"aw1",label:"The Claim on Trial",
+     text:"The Watch Tower Society teaches that belief in Jesus' deity was invented at the Council of Nicaea in AD 325 and imposed by the Roman emperor Constantine — 'for the first time, a political ruler stepped in to decide a religious matter' (Should You Believe in the Trinity?, 1989). That is a historical claim, and historical claims can be tested. What did Christians actually believe in the 292 years between the resurrection and Nicaea? The answer is not speculation. It survives in ink, in stone, and in the blood of the people who wrote it down.",
+     wt:{quote:"The testimony of the Bible and of history makes clear that the Trinity was unknown throughout Biblical times and for several centuries thereafter.",pub:"Should You Believe in the Trinity?, 1989, p. 12"}},
+    {id:"awT",label:"From the Upper Room to Nicaea — the Chain of Witness",
+     timeline:[
+       {year:"33",who:"Thomas · Jerusalem",title:"'My Lord and my God!'",
+        text:"The first recorded post-resurrection confession, printed unaltered in the NWT (John 20:28). Jesus does not correct him — he blesses those who will believe the same without seeing.",
+        source:"John 20:28–29"},
+       {year:"~63",who:"Paul · Letter to Titus",title:"'Our great God and Saviour'",
+        text:"Paul writes of awaiting 'the glorious manifestation of the great God and of our Savior, Jesus Christ' — a doctrinal statement inside a pastoral letter, decades before any council.",
+        source:"Titus 2:13"},
+       {year:"~90",who:"John · Ephesus and Patmos",title:"The Word was God; the Lamb worshipped",
+        text:"John opens his Gospel with the Word who was God and closes Revelation with every creature giving one worship 'to the One seated on the throne and to the Lamb' (Revelation 5:13).",
+        source:"John 1:1; Revelation 5:13–14"},
+       {year:"107",who:"Ignatius of Antioch",title:"'Our God, Jesus Christ' — written en route to the lions",
+        text:"Ignatius, bishop of Antioch, writes seven letters while being transported to Rome for execution, repeatedly calling Jesus 'our God' — 'for our God, Jesus Christ, was conceived by Mary.' He died for this. It was not a committee vote.",
+        source:"Ignatius, Letter to the Ephesians 18:2"},
+       {year:"~170",who:"Melito of Sardis",title:"'God has been murdered'",
+        text:"In his Passover sermon Melito says of the crucifixion: 'God has been murdered; the King of Israel has been slain by an Israelite hand.' No one in his congregation corrects him.",
+        source:"Melito, Peri Pascha 96",},
+       {year:"~180",who:"Irenaeus of Lyon",title:"'Our Lord, and God, and Saviour, and King'",
+        text:"Irenaeus — a student of Polycarp, who was a direct disciple of the apostle John — writes of 'Christ Jesus, our Lord, and God, and Saviour, and King.' One generation of teachers separates this sentence from the man who leaned on Jesus at the last supper.",
+        source:"Irenaeus, Against Heresies I.10.1"},
+       {year:"~230",who:"Megiddo, Israel",title:"A floor dedicated 'to God Jesus Christ'",
+        text:"In 2005 archaeologists excavating at Megiddo uncovered a third-century Christian meeting-hall mosaic, funded by a Roman officer, dedicated in Greek 'to God Jesus Christ' — laid in stone roughly 95 years before Nicaea.",
+        source:"Megiddo church mosaic, Israel Antiquities Authority, 2005"},
+       {year:"325",who:"Nicaea",title:"The council votes — to affirm, not invent",
+        text:"Constantine convenes the council; the assembled bishops — many bearing scars from the persecutions — overwhelmingly affirm what Ignatius had died confessing 218 years earlier, and condemn the new teaching that the Son was a creature.",
+        source:"Council of Nicaea, AD 325"}
+     ]},
+    {id:"aw2",label:"You Cannot Invent in 325 What Was Carved in 230",
+     text:"Line the evidence up against the claim. The confession 'my Lord and my God' is in the NWT's own text of John, spoken to Jesus' face. Ignatius calls Jesus 'our God' while being carted to the Colosseum — under an empire that killed Christians precisely for refusing to relativise their worship. Melito preaches the death of God to a congregation that takes it as gospel. Irenaeus, two teachers removed from the apostle John, lists 'God' among Jesus' ordinary titles. And a Roman soldier pays for a floor dedicated to 'God Jesus Christ' with tiles, in stone, permanently — 95 years before the council that allegedly invented the idea. Either the tiles were prophetic, or the belief already existed. The Watchtower's brochure quotes the early fathers selectively to suggest the opposite — and omits the inscription, the Passover sermon, and the martyr's letters entirely.",
+     note:"Notice also what changed at Nicaea on the Watchtower's own telling: nothing about worship on the ground. Christians did not begin calling Jesus God in 325; the record shows them dying for it under Nero and Domitian. What Nicaea added was a defensive definition — an answer to Arius. Councils do not invent what mosaics already say."},
+    {id:"aw3",label:"A Question Worth Sitting With",
+     text:"If the deity of Christ was a fourth-century political invention, why is the second century full of people being eaten by lions rather than deny it? Men do not die for a doctrine that has not been invented yet. The question worth putting gently: when Ignatius wrote 'our God, Jesus Christ' in AD 107 — two full centuries before Constantine was born — where did he get it? His teacher was John. Read John 1:1, John 20:28, and Revelation 5:13, and the answer suggests itself: not from a council, but from an apostle."}
+  ],related:["nicene","demons","doxologies","worship"]
+};
+
+STUDY_CONTENT["wings"]={
+  verse:{text:"With his pinions he will cover you, and under his wings you will take refuge.",ref:"Psalm 91:4 · NWT"},
+  sections:[
+    {id:"uw1",label:"Whose Wings?",
+     text:"One image runs through the OT as the ultimate picture of safety: the wings of God. 'Under his wings you will take refuge' (Psalm 91:4). 'Conceal me in the shadow of your wings' (Psalm 17:8) — David's personal cry, the wings of God as the only true hiding place. And Boaz's blessing over a Moabite widow: 'May Jehovah reward your actions... under whose wings you have come to seek refuge' (Ruth 2:12 NWT). Ruth is blessed precisely because she ran to the wings of the God of Israel — not to a nation, a system, or a human institution. In the OT, the wings of refuge belong exclusively to Jehovah."},
+    {id:"uw2",label:"Jerusalem, Jerusalem — He Claims Them",
+     text:"Then Jesus stands over the city and says: 'Jerusalem, Jerusalem... how often I wanted to gather your children together, the way a hen gathers her chicks under her wings! But you did not want it' (Matthew 23:37 NWT). Read it slowly. He is not pointing to someone else's refuge, the way a prophet would — 'return to Jehovah's wings.' He says my wings, my gathering, my grief at their refusal — centuries of it ('how often I wanted'), which is itself a quiet claim to have been the one calling Jerusalem all along. He is claiming to be the Refuge of the Psalms. The wings of Jehovah and the wings of Jesus are the same wings."},
+    {id:"uw3",label:"The Woman Who Reached for the Kanaph",
+     text:"Malachi 4:2 NWT promises: 'the sun of righteousness will shine, with healing in its wings' — Hebrew kanaph, a word that means both wing and the corner or hem of a garment (the fringe where the tassels of Numbers 15:38 hung). Now watch Matthew 9:20: a woman bleeding for twelve years — unclean, excluded, forbidden to touch anyone — comes up behind Jesus and touches 'the fringe of his outer garment.' The kanaph. She was reaching for the wings Malachi promised, and she was healed the moment she took hold. She did not ask permission. She did not go through a mediating institution. She came to him directly — and the power in his wings healed her instantly, and he called her 'daughter.'",
+     note:"This is what Malachi saw coming: the Messiah with healing in his kanaph. The woman understood who he was better than the crowd pressing on every side of him."},
+    {id:"uw4",label:"A Question Worth Sitting With",
+     text:"If the wings of refuge belong to Jehovah alone in the Psalms, why does Jesus claim them as his own over Jerusalem — and why does healing flow from his kanaph exactly as Malachi promised? If you are looking for a place of safety from the storms of life and the pressure of men's systems, the question is the one Ruth answered at the gate of Bethlehem: are you sheltering under an organisation — or under the wings of the One who still says, 'Come to me, and I will refresh you'? An organisation can feel like shelter, until the day it doesn't. The shelter the Psalms describe was never a building or a system. It is a person, and his wings are still open."}
+  ],related:["kalos","eternalcovenant","grace2","thetruth"]
 };
 
 STUDY_CONTENT["enthronement"]={
