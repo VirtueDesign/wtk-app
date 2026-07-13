@@ -1187,8 +1187,28 @@ STUDY_CONTENT["fourgospels"]={
 STUDY_CONTENT["isaiah"]={
   verse:{text:"The spirit of the Sovereign Lord Jehovah is upon me, because Jehovah anointed me to declare good news to the meek.",ref:"Isaiah 61:1 · NWT · Jesus quotes this in Luke 4:18"},
   sections:[
-    {id:"is1",label:"The Structure — a Bible Inside the Bible",
+    {id:"is1",mirror:{lhead:"Isaiah 1–39",lsub:"Judgment · Indictment · Woes",rhead:"Isaiah 40–66",rsub:"Comfort · Servant · New Creation",
+      rows:[
+       ["Ch 1–5 · Indictment of Israel","Ch 40–48 · God’s sovereignty; the servant introduced"],
+       ["Ch 6 · Throne vision — Isaiah undone","Ch 49–50 · The servant called; his obedience"],
+       ["Ch 7–12 · Immanuel — light in darkness","Ch 51–53 · The suffering servant — Isaiah 53"],
+       ["Ch 13–23 · Oracles against the nations","Ch 54–55 · The restored bride; come freely"],
+       ["Ch 24–27 · The Isaiah apocalypse","Ch 56–59 · Who belongs; covenant renewed"],
+       ["Ch 28–35 · Six woes against false trust","Ch 60–64 · The glory to come"],
+       ["Ch 36–39 · Hezekiah — the bridge","Ch 65–66 · New heavens and new earth"]
+      ]},label:"The Structure — a Bible Inside the Bible",
      text:"Isaiah opens with a throne vision, pivots on a suffering servant, and ends with new heavens and a new earth. The Bible opens with creation, pivots on the cross, and ends with new heavens and a new earth. Isaiah has 39 chapters of judgment followed by 27 chapters of redemption; the Bible has 39 books before the coming and 27 after it. Both open with creation and mankind's failure before a holy God; both close with a new Jerusalem where weeping and death are gone. And the first verse of Isaiah's redemption section — 40:3, 'a voice calling in the wilderness' — is quoted in all four Gospels as the opening event of the NT. The chapter numbers are a medieval addition, so hold the 39/27 count lightly — it is a signpost, not the argument. The argument is the shape: sixty-six chapters that rehearse the entire story of scripture, written seven centuries early."},
+    {id:"is1b",label:"The Echo — Isaiah Mirrors the Whole Bible",
+     text:"Set the two shelves side by side and the pattern repeats at full scale: the themes of Isaiah's halves are the themes of the Bible's two testaments, book for book.",
+     mirror:{lhead:"Old Testament",rhead:"New Testament",
+      rows:[
+       ["Genesis — creation; the fall; the promise","Matthew — the second Adam; the promise fulfilled"],
+       ["Exodus — Passover; the Law; the tabernacle","Hebrews — the Passover lamb; the law fulfilled; the true tabernacle"],
+       ["Psalms — the suffering and exaltation of the king","The Gospels — the suffering and exaltation of the Son"],
+       ["Isaiah — the servant who bears our iniquities","Romans — the atonement of the servant explained"],
+       ["Daniel — the Son of Man comes to the Ancient of Days","Revelation — the Son of Man receives the kingdom"],
+       ["Malachi — the messenger who prepares the way","Mark — opens with the messenger preparing the way"]
+      ]}},
     {id:"is2",label:"Chapter 6 — the Pivot Is a Christophany",
      text:"Isaiah 6 comes not at the book's start but after five chapters of indictment — after we have heard everything wrong with the world. Then Isaiah sees the throne: 'I saw Jehovah sitting on a lofty and elevated throne, and the skirts of his robe filled the temple... And one called to the other: Holy, holy, holy is Jehovah of armies' (6:1–3 NWT). The threefold holiness is unique in the Hebrew scriptures — no other attribute of God is tripled. Doubled is emphatic; tripled is transcendent. The seraphim are exhausting the limits of language. Isaiah is undone — 'I am as good as dead... my eyes have seen the King' — until a coal from the altar touches his lips: 'Your guilt is removed and your sin is atoned for' (6:7). Atonement before commission: before you can speak, you must be made clean, and the cleansing comes from the altar. Then John 12:41 NWT identifies the figure on that throne: 'Isaiah said these things because he saw his glory, and he spoke about him' — Jesus. The structural pivot of Isaiah is a Christophany.",
      note:"Revelation 4–5 completes the loop. John sees the same throne, hears the same cry — 'Holy, holy, holy' (Revelation 4:8) — and the sealed scroll of history can be opened by no one until the Lamb appears. The one worthy to open history is the one who sat on the throne of Isaiah 6."},
@@ -5635,6 +5655,39 @@ function StudyDetail(props){
                   fontWeight:600,letterSpacing:".12em",textTransform:"uppercase",marginBottom:4}},"Note"),
                 ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.isDark?"rgba(77,182,172,.9)":"rgba(0,100,95,1)",
                   fontSize:".8rem",fontWeight:400,lineHeight:1.65}},s.note)),
+              s.mirror&&ce("div",{style:{marginBottom:12,borderRadius:12,overflow:"hidden",
+                border:"1px solid "+T.border}},
+                ce("div",{style:{display:"flex"}},
+                  ce("div",{style:{flex:1,padding:"10px 12px",borderRight:"1px solid "+T.border,
+                    background:T.isDark?"rgba(196,92,92,.10)":"rgba(196,92,92,.06)"}},
+                    ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.red||"#C45C5C",fontSize:".56rem",
+                      fontWeight:700,letterSpacing:".14em",textTransform:"uppercase",margin:0}},s.mirror.lhead),
+                    s.mirror.lsub&&ce("p",{style:{fontFamily:"'Playfair Display',serif",color:T.text,
+                      fontWeight:700,fontSize:".82rem",margin:"2px 0 0"}},s.mirror.lsub)
+                  ),
+                  ce("div",{style:{flex:1,padding:"10px 12px",
+                    background:T.isDark?"rgba(77,182,172,.10)":"rgba(0,128,120,.05)"}},
+                    ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.teal,fontSize:".56rem",
+                      fontWeight:700,letterSpacing:".14em",textTransform:"uppercase",margin:0}},s.mirror.rhead),
+                    s.mirror.rsub&&ce("p",{style:{fontFamily:"'Playfair Display',serif",color:T.text,
+                      fontWeight:700,fontSize:".82rem",margin:"2px 0 0"}},s.mirror.rsub)
+                  )
+                ),
+                s.mirror.rows.map(function(row,ri){
+                  return ce("div",{key:ri,style:{display:"flex",borderTop:"1px solid "+T.border}},
+                    ce("div",{style:{flex:1,padding:"9px 12px",borderRight:"1px solid "+T.border,
+                      background:T.isDark?"rgba(196,92,92,.04)":"rgba(196,92,92,.025)"}},
+                      ce("p",{style:{fontFamily:"'Crimson Pro',Georgia,serif",color:T.soft,
+                        fontSize:".82rem",lineHeight:1.5,margin:0}},row[0])
+                    ),
+                    ce("div",{style:{flex:1,padding:"9px 12px",
+                      background:T.isDark?"rgba(77,182,172,.04)":"rgba(0,128,120,.02)"}},
+                      ce("p",{style:{fontFamily:"'Crimson Pro',Georgia,serif",color:T.soft,
+                        fontSize:".82rem",lineHeight:1.5,margin:0}},row[1])
+                    )
+                  );
+                })
+              ),
               s.img&&STUDY_IMAGES[s.img.key]&&ce("div",{style:{marginBottom:12,borderRadius:12,
                 overflow:"hidden",border:"1px solid "+T.border,background:T.bg2}},
                 ce("img",{src:STUDY_IMAGES[s.img.key],alt:s.img.caption||"",
