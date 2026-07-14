@@ -7448,8 +7448,52 @@ function DoorstepSheet(props){
   var T=props.T;
   var _topic=us(null),topic=_topic[0],setTopic=_topic[1];
   var _chatOpen=us(false),chatOpen=_chatOpen[0],setChatOpen=_chatOpen[1];
+  var _prep=us(""),prep=_prep[0],setPrep=_prep[1];
+  var _prepAsk=us(false),prepAsk=_prepAsk[0],setPrepAsk=_prepAsk[1];
 
   var activeTopic=DOORSTEP_TOPICS.find(function(t){return t.id===topic;});
+
+  /* ── Conversation prep: free-text topic matching ── */
+  var PREP_ALIASES={michael:["archangel","angel"],archangel:["michael","angel"],arcangel:["michael","archangel"],
+    cross:["stake","torture"],stake:["cross"],trinity:["almighty","godhead","spirit"],
+    "144000":["sealed","classes","anointed","flock"],"144":["sealed","classes","anointed"],
+    memorial:["covenant","mediator","bread"],soul:["dead","resurrection","grave"],
+    hell:["grave","dead"],paradise:["earth","kingdom"],blood:["ransom","sacrifice"],
+    "1914":["authority","generation","presence"],worship:["obeisance"],grave:["resurrection","dead"],
+    name:["jehovah","yhwh","tetragrammaton"],firstborn:["creation","begotten"]};
+  var PREP_STOP={"the":1,"and":1,"was":1,"are":1,"is":1,"a":1,"an":1,"of":1,"we":1,"about":1,"discussing":1,"study":1,"with":1,"they":1,"say":1,"that":1,"what":1};
+  var prepMatches=[],prepQuestions=[];
+  var prepQuery=prep.trim().toLowerCase();
+  if(prepQuery.length>2){
+    var toks=prepQuery.split(/[^a-z0-9]+/).filter(function(t){return t.length>2&&!PREP_STOP[t];});
+    var expanded=toks.slice();
+    toks.forEach(function(t){(PREP_ALIASES[t]||[]).forEach(function(a){if(expanded.indexOf(a)===-1)expanded.push(a);});});
+    var scored=[];
+    SECTIONS.forEach(function(sec){sec.studies.forEach(function(s){
+      var title=(s.title||"").toLowerCase(),desc=(s.desc||"").toLowerCase(),ref=(s.ref||"").toLowerCase();
+      var score=0;
+      expanded.forEach(function(t){
+        if(title.indexOf(t)!==-1)score+=3;
+        if(desc.indexOf(t)!==-1)score+=1;
+        if(ref.indexOf(t)!==-1)score+=1;
+      });
+      if(score>0)scored.push({study:s,sec:sec,score:score});
+    });});
+    scored.sort(function(a,b){return b.score-a.score;});
+    prepMatches=scored.slice(0,6);
+    prepMatches.forEach(function(m){
+      var c=STUDY_CONTENT[m.study.id];
+      if(!c||!c.sections)return;
+      c.sections.forEach(function(s){
+        if(/question/i.test(s.label||"")&&s.text&&prepQuestions.length<4){
+          var txt=s.text;
+          if(txt.length>240){txt=txt.slice(0,240);txt=txt.slice(0,txt.lastIndexOf(" "))+"…";}
+          prepQuestions.push({text:txt,study:m.study,sec:m.sec});
+        }
+      });
+    });
+  }
+  var prepActive=prepAsk&&prepQuery.length>2;
 
   var studyList=[];
   if(activeTopic){
@@ -7477,14 +7521,26 @@ function DoorstepSheet(props){
 
   var activeDc=activeTopic?DOOR_CLAIMS.find(function(dc){return dc.topic===activeTopic.id;}):null;
   var doorstepPrompt=activeTopic?buildDoorstepPrompt(activeTopic,activeDc):null;
-  var ctx={
+  var ctx=prepActive?{
+    title:"Starting a study: "+prep.trim(),
+    ref:"Conversation prep",
+    section:"Doorstep Mode",
+    summary:"The user is preparing for a study conversation about: "+prep.trim()+". "+
+      (prepMatches.length?"Studies in this app that match the topic (recommend these by name where relevant): "+prepMatches.map(function(m){return m.study.title;}).join("; ")+". ":"")+
+      "Help them prepare: suggest gentle, conscience-touching opening questions from the NWT, anticipate likely responses, and point them to the matching studies."
+  }:{
     title:activeTopic?activeTopic.label:"Doorstep conversation",
     ref:"JW doorstep conversation",
     section:"Doorstep Mode",
     summary:activeTopic?"Topic: "+activeTopic.label+". Key studies: "+activeTopic.studies.join(", ")
       :"Doorstep conversation with a Jehovah's Witness. Saved studies: "+Array.from(props.savedStudies).join(", ")
   };
-  var starters=activeTopic
+  var starters=prepActive
+    ?["We're discussing "+prep.trim()+" — give me one gentle opening question from the NWT.",
+      "What is a Witness likely to say about this, and how do I keep the conversation open?",
+      "Which of the suggested studies should I read first, and why?",
+      "Give me a question that touches the conscience, not just the intellect."]
+    :activeTopic
     ?(activeDc
       ?["They just said this — what's the first thing to say?",
         "They're pushing back — give me the next move.",
@@ -7527,10 +7583,65 @@ function DoorstepSheet(props){
 
       ce("div",{style:{flex:1,overflowY:"auto",paddingBottom:28}},
 
-        ce("div",{style:{padding:"14px 16px 10px"}},
+        ce("div",{style:{padding:"14px 16px 4px"}},
+          ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.gold,fontSize:".6rem",
+            fontWeight:600,letterSpacing:".15em",textTransform:"uppercase",marginBottom:6}},
+            "Starting a study?"),
+          ce("input",{type:"text",value:prep,placeholder:"What are you discussing? e.g. Michael the archangel",
+            onChange:function(e){setPrep(e.target.value);setPrepAsk(false);},
+            style:{width:"100%",boxSizing:"border-box",padding:"10px 14px",borderRadius:11,
+              border:"1px solid "+T.border,background:T.bg2,color:T.text,
+              fontFamily:"'DM Sans',sans-serif",fontSize:".85rem",outline:"none",marginBottom:8}}),
+          prepQuery.length>2&&prepMatches.length===0&&ce("p",{style:{fontFamily:"'DM Sans',sans-serif",
+            color:T.dim,fontSize:".75rem",fontStyle:"italic",marginBottom:8}},
+            "No matching studies found — try a different word, or ask the companion below."),
+          prepMatches.length>0&&ce("div",{style:{marginBottom:8}},
+            ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.dim,fontSize:".6rem",
+              fontWeight:600,letterSpacing:".12em",textTransform:"uppercase",marginBottom:6}},
+              "Studies that will help"),
+            prepMatches.map(function(m){
+              return ce("button",{key:m.study.id,
+                onClick:function(){props.onOpenStudy(m.sec,m.study);props.onClose();},
+                style:{display:"block",width:"100%",textAlign:"left",marginBottom:6,
+                  background:T.bg2,border:"1px solid "+T.border,borderLeft:"3px solid "+T.gold,
+                  borderRadius:10,padding:"9px 12px",cursor:"pointer"}},
+                ce("p",{style:{fontFamily:"'Playfair Display',serif",color:T.text,fontSize:".88rem",
+                  fontWeight:700,marginBottom:2}},m.study.title),
+                ce("p",{style:{fontFamily:"'JetBrains Mono',monospace",color:T.dim,
+                  fontSize:".56rem",letterSpacing:".03em"}},m.study.ref)
+              );
+            })
+          ),
+          prepQuestions.length>0&&ce("div",{style:{marginBottom:8}},
+            ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.dim,fontSize:".6rem",
+              fontWeight:600,letterSpacing:".12em",textTransform:"uppercase",marginBottom:6}},
+              "Questions to carry in"),
+            prepQuestions.map(function(q,qi){
+              return ce("button",{key:qi,
+                onClick:function(){props.onOpenStudy(q.sec,q.study);props.onClose();},
+                style:{display:"block",width:"100%",textAlign:"left",marginBottom:6,
+                  background:T.isDark?"rgba(77,182,172,.07)":"rgba(0,128,120,.05)",
+                  border:"1px solid "+(T.isDark?"rgba(77,182,172,.25)":"rgba(0,128,120,.2)"),
+                  borderRadius:10,padding:"9px 12px",cursor:"pointer"}},
+                ce("p",{style:{fontFamily:"'Crimson Pro',Georgia,serif",color:T.soft,fontSize:".82rem",
+                  fontStyle:"italic",lineHeight:1.55,marginBottom:3}},q.text),
+                ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.teal,
+                  fontSize:".58rem",fontWeight:600}},"→ "+q.study.title)
+              );
+            })
+          ),
+          prepQuery.length>2&&ce("button",{
+            onClick:function(){setTopic(null);setPrepAsk(true);setChatOpen(true);},
+            style:{width:"100%",padding:"10px 14px",borderRadius:11,marginBottom:10,
+              background:T.gold+"22",border:"1px solid "+T.gold,color:T.gold,
+              fontFamily:"'DM Sans',sans-serif",fontSize:".82rem",fontWeight:600,cursor:"pointer"}},
+            "✨ Ask the companion about this conversation")
+        ),
+
+        ce("div",{style:{padding:"6px 16px 10px"}},
           ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.dim,fontSize:".72rem",
             fontWeight:400,marginBottom:10,lineHeight:1.5}},
-            "What are they saying? Tap a topic to see the key studies and ask the companion."),
+            "Or: what are they saying? Tap a topic to see the key studies and ask the companion."),
           ce("div",{style:{display:"flex",gap:7,flexWrap:"wrap"}},
             DOORSTEP_TOPICS.map(function(t){
               var on=topic===t.id;
