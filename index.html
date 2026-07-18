@@ -7450,6 +7450,19 @@ function DoorstepSheet(props){
   var _chatOpen=us(false),chatOpen=_chatOpen[0],setChatOpen=_chatOpen[1];
   var _prep=us(""),prep=_prep[0],setPrep=_prep[1];
   var _prepAsk=us(false),prepAsk=_prepAsk[0],setPrepAsk=_prepAsk[1];
+  var _prepSel=us([]),prepSel=_prepSel[0],setPrepSel=_prepSel[1];
+  var _prepName=us(""),prepName=_prepName[0],setPrepName=_prepName[1];
+  var _prepSavedMsg=us(false),prepSavedMsg=_prepSavedMsg[0],setPrepSavedMsg=_prepSavedMsg[1];
+  function prepKey(it){return it.type+":"+(it.type==="study"?it.id:it.text.slice(0,40));}
+  function togglePrepSel(it){
+    setPrepSavedMsg(false);
+    setPrepSel(function(p){
+      var k=prepKey(it);
+      if(p.some(function(x){return prepKey(x)===k;}))return p.filter(function(x){return prepKey(x)!==k;});
+      return [...p,it];
+    });
+  }
+  function prepSelected(it){var k=prepKey(it);return prepSel.some(function(x){return prepKey(x)===k;});}
 
   var activeTopic=DOORSTEP_TOPICS.find(function(t){return t.id===topic;});
 
@@ -7600,15 +7613,23 @@ function DoorstepSheet(props){
               fontWeight:600,letterSpacing:".12em",textTransform:"uppercase",marginBottom:6}},
               "Studies that will help"),
             prepMatches.map(function(m){
-              return ce("button",{key:m.study.id,
-                onClick:function(){props.onOpenStudy(m.sec,m.study);props.onClose();},
-                style:{display:"block",width:"100%",textAlign:"left",marginBottom:6,
-                  background:T.bg2,border:"1px solid "+T.border,borderLeft:"3px solid "+T.gold,
-                  borderRadius:10,padding:"9px 12px",cursor:"pointer"}},
-                ce("p",{style:{fontFamily:"'Playfair Display',serif",color:T.text,fontSize:".88rem",
-                  fontWeight:700,marginBottom:2}},m.study.title),
-                ce("p",{style:{fontFamily:"'JetBrains Mono',monospace",color:T.dim,
-                  fontSize:".56rem",letterSpacing:".03em"}},m.study.ref)
+              var it={type:"study",id:m.study.id,title:m.study.title};
+              var on=prepSelected(it);
+              return ce("div",{key:m.study.id,
+                style:{display:"flex",alignItems:"stretch",marginBottom:6,
+                  background:T.bg2,border:"1px solid "+(on?T.gold:T.border),borderLeft:"3px solid "+T.gold,
+                  borderRadius:10,overflow:"hidden"}},
+                ce("div",{onClick:function(){props.onOpenStudy(m.sec,m.study);props.onClose();},
+                  style:{flex:1,padding:"9px 12px",cursor:"pointer"}},
+                  ce("p",{style:{fontFamily:"'Playfair Display',serif",color:T.text,fontSize:".88rem",
+                    fontWeight:700,marginBottom:2}},m.study.title),
+                  ce("p",{style:{fontFamily:"'JetBrains Mono',monospace",color:T.dim,
+                    fontSize:".56rem",letterSpacing:".03em"}},m.study.ref)
+                ),
+                ce("button",{onClick:function(){togglePrepSel(it);},
+                  style:{flexShrink:0,width:44,background:on?T.gold+"22":"transparent",
+                    border:"none",borderLeft:"1px solid "+T.border,color:on?T.gold:T.dim,
+                    fontSize:"1.05rem",cursor:"pointer"}},on?"✓":"＋")
               );
             })
           ),
@@ -7617,19 +7638,49 @@ function DoorstepSheet(props){
               fontWeight:600,letterSpacing:".12em",textTransform:"uppercase",marginBottom:6}},
               "Questions to carry in"),
             prepQuestions.map(function(q,qi){
-              return ce("button",{key:qi,
-                onClick:function(){props.onOpenStudy(q.sec,q.study);props.onClose();},
-                style:{display:"block",width:"100%",textAlign:"left",marginBottom:6,
+              var it={type:"question",text:q.text,studyId:q.study.id,studyTitle:q.study.title};
+              var on=prepSelected(it);
+              return ce("div",{key:qi,
+                style:{display:"flex",alignItems:"stretch",marginBottom:6,
                   background:T.isDark?"rgba(77,182,172,.07)":"rgba(0,128,120,.05)",
-                  border:"1px solid "+(T.isDark?"rgba(77,182,172,.25)":"rgba(0,128,120,.2)"),
-                  borderRadius:10,padding:"9px 12px",cursor:"pointer"}},
-                ce("p",{style:{fontFamily:"'Crimson Pro',Georgia,serif",color:T.soft,fontSize:".82rem",
-                  fontStyle:"italic",lineHeight:1.55,marginBottom:3}},q.text),
-                ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.teal,
-                  fontSize:".58rem",fontWeight:600}},"→ "+q.study.title)
+                  border:"1px solid "+(on?T.teal:(T.isDark?"rgba(77,182,172,.25)":"rgba(0,128,120,.2)")),
+                  borderRadius:10,overflow:"hidden"}},
+                ce("div",{onClick:function(){props.onOpenStudy(q.sec,q.study);props.onClose();},
+                  style:{flex:1,padding:"9px 12px",cursor:"pointer"}},
+                  ce("p",{style:{fontFamily:"'Crimson Pro',Georgia,serif",color:T.soft,fontSize:".82rem",
+                    fontStyle:"italic",lineHeight:1.55,marginBottom:3}},q.text),
+                  ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.teal,
+                    fontSize:".58rem",fontWeight:600}},"→ "+q.study.title)
+                ),
+                ce("button",{onClick:function(){togglePrepSel(it);},
+                  style:{flexShrink:0,width:44,background:on?T.teal+"22":"transparent",
+                    border:"none",borderLeft:"1px solid "+T.border,color:on?T.teal:T.dim,
+                    fontSize:"1.05rem",cursor:"pointer"}},on?"✓":"＋")
               );
             })
           ),
+          prepSel.length>0&&ce("div",{style:{marginBottom:8,padding:"10px 12px",borderRadius:11,
+            background:T.bg2,border:"1px solid "+T.gold}},
+            ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.gold,fontSize:".6rem",
+              fontWeight:600,letterSpacing:".12em",textTransform:"uppercase",marginBottom:6}},
+              prepSel.length+" selected — build a personalised study"),
+            ce("input",{type:"text",value:prepName,placeholder:"Name it — e.g. "+(prep.trim()||"My study"),
+              onChange:function(e){setPrepName(e.target.value);},
+              style:{width:"100%",boxSizing:"border-box",padding:"8px 12px",borderRadius:9,
+                border:"1px solid "+T.border,background:T.bg,color:T.text,
+                fontFamily:"'DM Sans',sans-serif",fontSize:".82rem",outline:"none",marginBottom:7}}),
+            ce("button",{onClick:function(){
+                props.onSaveMyStudy((prepName.trim()||prep.trim()||"My study"),prep.trim(),prepSel);
+                setPrepSel([]);setPrepName("");setPrepSavedMsg(true);
+              },
+              style:{width:"100%",padding:"9px 12px",borderRadius:9,
+                background:T.gold,border:"none",color:T.isDark?"#04182E":"#fff",
+                fontFamily:"'DM Sans',sans-serif",fontSize:".82rem",fontWeight:700,cursor:"pointer"}},
+              "Save personalised study")
+          ),
+          prepSavedMsg&&ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.teal,
+            fontSize:".75rem",fontWeight:600,marginBottom:8}},
+            "✓ Saved — find it under Journal → My Studies."),
           prepQuery.length>2&&ce("button",{
             onClick:function(){setTopic(null);setPrepAsk(true);setChatOpen(true);},
             style:{width:"100%",padding:"10px 14px",borderRadius:11,marginBottom:10,
@@ -8898,6 +8949,8 @@ function JournalTab(props){
       onOpenKnock:props.onOpenKnock,onOpenWord:props.onOpenWord});
   }
   return ce(JournalContactList,{T:T,contacts:journal.contacts,onAdd:addContact,
+    myStudies:props.myStudies,onDeleteMyStudy:props.onDeleteMyStudy,
+    onOpenMyStudyItem:props.onOpenMyStudyItem,
     onOpen:function(cid){setView({mode:"contact",contactId:cid});},
     savedStudies:props.savedStudies,savedCards:props.savedCards,savedKnocks:props.savedKnocks,
     savedWords:props.savedWords,savedQuotes:props.savedQuotes,savedAssignments:props.savedAssignments||{},
@@ -9060,6 +9113,65 @@ function JournalSavedSection(props){
   );
 }
 
+function MyStudiesSection(props){
+  var T=props.T;
+  var _open=us(null),openId=_open[0],setOpenId=_open[1];
+  return ce("div",{style:{padding:"18px 16px 4px"}},
+    ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.gold,fontSize:".6rem",
+      fontWeight:600,letterSpacing:".15em",textTransform:"uppercase",marginBottom:8}},
+      "My Studies"),
+    props.myStudies.map(function(ms){
+      var on=openId===ms.id;
+      var nStudies=ms.items.filter(function(i){return i.type==="study";}).length;
+      var nQs=ms.items.filter(function(i){return i.type==="question";}).length;
+      return ce("div",{key:ms.id,style:{marginBottom:8,borderRadius:12,overflow:"hidden",
+        border:"1px solid "+(on?T.gold:T.border),background:T.bg2}},
+        ce("button",{onClick:function(){setOpenId(on?null:ms.id);},
+          style:{display:"flex",width:"100%",alignItems:"center",justifyContent:"space-between",
+            padding:"11px 14px",background:"none",border:"none",cursor:"pointer",textAlign:"left"}},
+          ce("div",null,
+            ce("p",{style:{fontFamily:"'Playfair Display',serif",color:T.text,fontSize:".95rem",
+              fontWeight:700,margin:0}},ms.name),
+            ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.dim,fontSize:".68rem",
+              margin:"2px 0 0"}},
+              nStudies+" stud"+(nStudies===1?"y":"ies")+(nQs?" · "+nQs+" question"+(nQs===1?"":"s"):"")+" · "+ms.created)
+          ),
+          ce("span",{style:{color:T.dim,fontSize:".85rem",transform:on?"rotate(90deg)":"none"}},"›")
+        ),
+        on&&ce("div",{style:{padding:"0 12px 12px"}},
+          ms.items.map(function(it,ii){
+            if(it.type==="study"){
+              return ce("button",{key:ii,onClick:function(){props.onOpenItem(it.id);},
+                style:{display:"block",width:"100%",textAlign:"left",marginBottom:6,
+                  background:T.bg,border:"1px solid "+T.border,borderLeft:"3px solid "+T.gold,
+                  borderRadius:9,padding:"8px 12px",cursor:"pointer"}},
+                ce("p",{style:{fontFamily:"'Playfair Display',serif",color:T.text,
+                  fontSize:".85rem",fontWeight:700,margin:0}},it.title||it.id)
+              );
+            }
+            return ce("button",{key:ii,onClick:function(){if(it.studyId)props.onOpenItem(it.studyId);},
+              style:{display:"block",width:"100%",textAlign:"left",marginBottom:6,
+                background:T.isDark?"rgba(77,182,172,.07)":"rgba(0,128,120,.05)",
+                border:"1px solid "+(T.isDark?"rgba(77,182,172,.25)":"rgba(0,128,120,.2)"),
+                borderRadius:9,padding:"8px 12px",cursor:"pointer"}},
+              ce("p",{style:{fontFamily:"'Crimson Pro',Georgia,serif",color:T.soft,fontSize:".8rem",
+                fontStyle:"italic",lineHeight:1.5,margin:0}},it.text),
+              it.studyTitle&&ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.teal,
+                fontSize:".56rem",fontWeight:600,margin:"3px 0 0"}},"→ "+it.studyTitle)
+            );
+          }),
+          ce("button",{onClick:function(){
+              if(confirm("Delete the personalised study \u2018"+ms.name+"\u2019?"))props.onDelete(ms.id);
+            },
+            style:{background:"none",border:"none",color:T.dim,fontFamily:"'DM Sans',sans-serif",
+              fontSize:".72rem",cursor:"pointer",textDecoration:"underline",padding:"4px 0 0"}},
+            "Delete this study")
+        )
+      );
+    })
+  );
+}
+
 function JournalContactList(props){
   var T=props.T,contacts=props.contacts;
   var _adding=us(false),adding=_adding[0],setAdding=_adding[1];
@@ -9100,6 +9212,9 @@ function JournalContactList(props){
       ce("button",{onClick:function(){setAdding(true);},
         style:{background:"none",border:"1px dashed "+T.border,borderRadius:20,padding:"8px 18px",
           color:T.gold,fontFamily:"'DM Sans',sans-serif",fontSize:".85rem",cursor:"pointer"}},"+ Add contact")):null,
+    props.myStudies&&props.myStudies.length>0&&ce(MyStudiesSection,{T:T,
+      myStudies:props.myStudies,onDelete:props.onDeleteMyStudy,
+      onOpenItem:props.onOpenMyStudyItem}),
     props.savedStudies&&ce(JournalSavedSection,{T:T,
       savedStudies:props.savedStudies,savedCards:props.savedCards,savedKnocks:props.savedKnocks,
       savedWords:props.savedWords,savedQuotes:props.savedQuotes,savedAssignments:props.savedAssignments||{},
@@ -9345,6 +9460,23 @@ function App(){
     try{localStorage.setItem("wtk_journal",JSON.stringify(journal));}catch(e){}
   },[journal]);
 
+  var _myStudies=us(function(){
+    try{return JSON.parse(localStorage.getItem("wtk_mystudies")||"null")||[];}
+    catch(e){return[];}
+  }),myStudies=_myStudies[0],setMyStudies=_myStudies[1];
+
+  ue(function(){
+    try{localStorage.setItem("wtk_mystudies",JSON.stringify(myStudies));}catch(e){}
+  },[myStudies]);
+
+  function saveMyStudy(name,topic,items){
+    setMyStudies(function(p){return [...p,{id:"ms"+Date.now().toString(36),
+      name:name,topic:topic,created:new Date().toISOString().slice(0,10),items:items}];});
+  }
+  function deleteMyStudy(id){
+    setMyStudies(function(p){return p.filter(function(m){return m.id!==id;});});
+  }
+
   ue(function(){
     document.body.style.background=T.pageBody;
     document.body.className=isDark?"":"light";
@@ -9467,6 +9599,12 @@ function App(){
     mainContent=ce(QuotesTab,{T:T,savedQuotes:savedQuotes,onToggleSavedQuote:requestSavedQuote});
   }else if(tab==="journal"){
     mainContent=ce(JournalTab,{T:T,journal:journal,onSave:setJournal,
+      myStudies:myStudies,onDeleteMyStudy:deleteMyStudy,
+      onOpenMyStudyItem:function(studyId){
+        var ts=null,tst=null;
+        SECTIONS.forEach(function(s){s.studies.forEach(function(st){if(st.id===studyId){ts=s;tst=st;}});});
+        if(ts&&tst){setTab("library");openStudy(ts,tst);}
+      },
       savedStudies:savedStudies,savedCards:savedCards,savedKnocks:savedKnocks,
       savedWords:savedWords,savedQuotes:savedQuotes,savedAssignments:savedAssignments,
       notesByStudy:notesByStudy,pointsByStudy:pointsByStudy,
@@ -9518,6 +9656,7 @@ function App(){
     doorstepOpen&&ce(DoorstepSheet,{T:T,apiKey:apiKey,
       savedStudies:savedStudies,savedWords:savedWords,
       pointsByStudy:pointsByStudy,
+      onSaveMyStudy:saveMyStudy,
       onOpenStudy:function(sec,study){setTab("library");openStudy(sec,study);},
       onOpenWord:function(w){setTab("words");setWordOpen(w);},
       onClose:function(){setDoorstepOpen(false);}}),
