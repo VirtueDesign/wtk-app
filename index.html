@@ -34,6 +34,9 @@ body.light input::placeholder{color:rgba(26,18,6,.3)}
 .row::-webkit-scrollbar{display:none}
 .chip-row{display:flex;gap:7px;overflow-x:auto;padding:0 16px 4px;scrollbar-width:none}
 .chip-row::-webkit-scrollbar{display:none}
+.dropcap::first-letter{font-family:'Playfair Display',serif;font-weight:700;font-size:2.9em;
+  float:left;line-height:.78;padding:.04em .07em 0 0;color:#C5A06D;}
+body.light .dropcap::first-letter{color:#7a5a20;}
 </style>
 </head>
 <body><div id="root"></div>
@@ -3845,7 +3848,7 @@ STUDY_CONTENT["grace"]={
 STUDY_CONTENT["citiesofrefuge"]={
   verse:{text:"He shall remain in his city of refuge until the death of the high priest who was anointed with the holy oil. Then the manslayer may return to his own landed property.",ref:"Numbers 35:25, 28 · NWT"},
   sections:[
-    {id:"cr1",label:"Six Cities, One Purpose",
+    {id:"cr1",label:"Six Cities, One Purpose",dropcap:true,
      text:"Numbers 35 sets aside six cities — three east of the Jordan, three west, spaced so that no Israelite was ever more than a short journey from one. Their purpose was narrow and specific: if a man killed another accidentally — an axe-head flying off its handle, a stone dropped without malice (35:22–23) — he could run there and be safe from the goel hadam, the ‘avenger of blood,’ the victim's nearest relative with both the right and the duty to kill him on sight. Inside the city he was tried. If the killing was ruled accidental, he was protected — but not released. He had to stay. Cross the city boundary before the appointed time, and the avenger could kill him with no guilt attached (35:26–27). The refuge was real. It was also, for now, a kind of exile.",
      pairs:[{title:"The refuge, named",otLabel:"Numbers 35",ntLabel:"Hebrews 6:18",ot:{text:"The congregation must rescue the manslayer from the hand of the avenger of blood, and the congregation must return him to his city of refuge to which he fled.",ref:"Numbers 35:25"},nt:{text:"We who have fled for refuge may have strong encouragement to hold fast to the hope set before us.",ref:"Hebrews 6:18"},note:"Hebrews reaches for this exact law by name — see Section 4 for the Greek verb it borrows."}]},
     {id:"cr2",label:"The Bloodguilt Money Couldn't Pay",
@@ -3876,7 +3879,9 @@ STUDY_CONTENT["citiesofrefuge"]={
          ["Freedom is geographical and temporary — good until the next accidental death, the next exile.","Freedom is eternal and universal — 'an everlasting deliverance.' Hebrews 9:12."]
        ]}},
     {id:"cr7",label:"A Question Worth Sitting With",
-     text:"The manslayer in Numbers 35 did not earn his release by good behaviour inside the city walls. He could have spent every day of his exile in perfect obedience and it would have changed nothing — his freedom was tied to one thing only, an event entirely outside his control: the high priest's death. The Watchtower's framework asks you to behave well inside the city indefinitely — faithful service, field hours, organisational loyalty — as though release were still pending on your conduct. But the law itself never worked that way, even in the shadow. The question worth sitting with: if the type never let obedience buy an early release, what makes anyone think the reality — where the priest has already died — requires it now?"}
+     text:"The manslayer in Numbers 35 did not earn his release by good behaviour inside the city walls. He could have spent every day of his exile in perfect obedience and it would have changed nothing.",
+     pull:{text:"His freedom was tied to one thing only, an event entirely outside his control: the high priest's death."},
+     note:"The Watchtower's framework asks you to behave well inside the city indefinitely — faithful service, field hours, organisational loyalty — as though release were still pending on your conduct. But the law itself never worked that way, even in the shadow. The question worth sitting with: if the type never let obedience buy an early release, what makes anyone think the reality — where the priest has already died — requires it now?"}
   ],related:["mercyseat","finished","joshuapriest","grace"]
 };
 
@@ -6334,9 +6339,14 @@ function StudyDetail(props){
                       color:T.isDark?"rgba(255,255,255,.55)":"rgba(0,0,0,.5)"}},idx+1)
               ),
               ce("div",{style:{flex:1,marginRight:8}},
-                ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:on?col:T.dim,fontSize:".6rem",
-                  fontWeight:600,letterSpacing:".1em",textTransform:"uppercase",margin:"0 0 3px"}},
-                  (idx+1)+" of "+totalSecs+(isRead?" \u00b7 read":"")),
+                ce("div",{style:{display:"flex",alignItems:"center",gap:6,marginBottom:3}},
+                  ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:on?col:T.dim,fontSize:".6rem",
+                    fontWeight:600,letterSpacing:".1em",textTransform:"uppercase",margin:0}},
+                    (idx+1)+" of "+totalSecs+(isRead?" \u00b7 read":"")),
+                  (s.mirror||s.timeline||s.img||s.pairs||s.word||s.wt)&&ce("span",{title:"Visual layout",
+                    style:{display:"inline-flex",width:12,height:12,borderRadius:3,flexShrink:0,
+                      border:"1.4px solid "+(on?col:T.dim),opacity:.85}})
+                ),
                 ce("p",{style:{fontFamily:"'Playfair Display',serif",color:on?T.text:T.soft,fontSize:".95rem",
                   fontWeight:on?700:400,lineHeight:1.25}},s.label)
               ),
@@ -6345,8 +6355,12 @@ function StudyDetail(props){
             ),
             on&&ce("div",{style:{padding:"13px 14px 15px",
               background:T.isDark?"rgba(4,14,40,.55)":"rgba(0,0,0,.02)"}},
-              s.text&&ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.soft,fontSize:".9rem",
+              s.text&&ce("p",{className:s.dropcap?"dropcap":undefined,
+                style:{fontFamily:"'DM Sans',sans-serif",color:T.soft,fontSize:".9rem",
                 fontWeight:300,lineHeight:1.82,marginBottom:s.note?8:12}},parseVerseRefs(s.text,T)),
+              s.pull&&ce("p",{style:{fontFamily:"'Playfair Display',serif",color:T.text,
+                fontWeight:700,fontStyle:"italic",fontSize:"1.28rem",lineHeight:1.32,
+                textAlign:"center",margin:"18px 6px 20px"}},s.pull.text),
               s.note&&ce("div",{style:{background:T.isDark?"rgba(77,182,172,.1)":"rgba(0,128,120,.07)",
                 border:"1px solid "+(T.isDark?"rgba(77,182,172,.25)":"rgba(0,128,120,.2)"),
                 borderRadius:9,padding:"9px 12px",marginBottom:12}},
