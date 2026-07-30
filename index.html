@@ -6343,9 +6343,10 @@ function StudyDetail(props){
                   ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:on?col:T.dim,fontSize:".6rem",
                     fontWeight:600,letterSpacing:".1em",textTransform:"uppercase",margin:0}},
                     (idx+1)+" of "+totalSecs+(isRead?" \u00b7 read":"")),
-                  (s.mirror||s.timeline||s.img||s.pairs||s.word||s.wt)&&ce("span",{title:"Visual layout",
-                    style:{display:"inline-flex",width:12,height:12,borderRadius:3,flexShrink:0,
-                      border:"1.4px solid "+(on?col:T.dim),opacity:.85}})
+                  (s.mirror||s.timeline||s.img||s.pairs||s.word||s.wt)&&ce("svg",{width:13,height:11,
+                    viewBox:"0 0 16 13",fill:"none",style:{flexShrink:0,opacity:.85},title:"Visual layout"},
+                    ce("rect",{x:0,y:0,width:7,height:13,rx:1.5,fill:on?col:T.dim,fillOpacity:.55}),
+                    ce("rect",{x:9,y:0,width:7,height:13,rx:1.5,fill:on?col:T.dim,fillOpacity:.28}))
                 ),
                 ce("p",{style:{fontFamily:"'Playfair Display',serif",color:on?T.text:T.soft,fontSize:".95rem",
                   fontWeight:on?700:400,lineHeight:1.25}},s.label)
