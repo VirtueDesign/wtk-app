@@ -4510,6 +4510,7 @@ var DOOR_OBJECTIONS={
 
 var WT_DOSSIERS=[
   {id:"mediator",
+   study:"mediator2",studyTitle:"The 144,000 — Your Mediator",
    tag:"Salvation",
    col:"#C0392B",
    title:"Jesus Is Not Your Mediator",
@@ -4531,6 +4532,7 @@ var WT_DOSSIERS=[
       reply:"The two-class system — anointed and other sheep — is still current doctrine on jw.org today. The two-class structure requires two different relationships with Christ. The doctrine has not changed."}
    ]},
   {id:"resurrection",
+   study:"risen",studyTitle:"The Risen Christ",
    tag:"Resurrection",
    col:"#7D3C98",
    title:"Jesus Was Not Bodily Raised",
@@ -4552,6 +4554,7 @@ var WT_DOSSIERS=[
       reply:"That verse is about the mode of resurrection — by God’s Spirit — not the elimination of his body. The parallel is 1 Corinthians 15:44, where Paul says the body sown physical is raised spiritual. Same body, transformed. Every other resurrection in Scripture involved the same body."}
    ]},
   {id:"michael",
+   study:"michael",studyTitle:"The Michael Question",
    tag:"Identity",
    col:"#D35400",
    title:"Jesus Is Michael the Archangel",
@@ -4573,6 +4576,7 @@ var WT_DOSSIERS=[
       reply:"The meaning of a name doesn’t make two people the same person. Hebrews 1:6 says even the angels worship Jesus — which would mean angels worship another angel."}
    ]},
   {id:"newcovenant",
+   study:"twoclasses",studyTitle:"Two Classes, No Mediator",
    tag:"Covenant",
    col:"#1A5276",
    title:"Only 144,000 Are in the New Covenant",
@@ -4594,6 +4598,7 @@ var WT_DOSSIERS=[
       reply:"Jeremiah 31 says that, yes. Hebrews 8 quotes it and applies it to all those in Christ — Jew and Gentile. The ‘Israel of God’ in Galatians 6:16 is all believers in Christ, not an elite subset."}
    ]},
   {id:"fds",
+   study:"fds",studyTitle:"The Faithful and Discreet Slave",
    tag:"Authority",
    col:"#0E6655",
    title:"The Governing Body Is God’s Only Channel",
@@ -4615,6 +4620,7 @@ var WT_DOSSIERS=[
       reply:"That’s a reasonable description of a pastor or commentator. But the Watchtower goes further — they say the Governing Body is appointed over God’s household and that disobeying them is disobeying God. Those are very different claims."}
    ]},
   {id:"1914",
+   study:"enthronement",studyTitle:"The Enthronement",
    tag:"Prophecy",
    col:"#626567",
    title:"1914 — Jesus’ Invisible Return",
@@ -4636,6 +4642,7 @@ var WT_DOSSIERS=[
       reply:"Jesus said the beginning of birth pains, not the arrival of the Kingdom. Wars and earthquakes predate 1914 significantly. Also, 607 BCE — the starting date for the calculation — contradicts the historical record, which places Jerusalem’s fall in 587 BCE."}
    ]},
   {id:"apollyon",
+   study:"apollyon",studyTitle:"Jesus as Apollyon",
    tag:"Identity",
    col:"#922B21",
    title:"Jesus Is the Destroyer (Apollyon)",
@@ -4657,6 +4664,7 @@ var WT_DOSSIERS=[
       reply:"The Revelation — Its Grand Climax at Hand! book, which contains this teaching, was published in 1988 and revised in 2006 — it remains in current use. Ask at your Kingdom Hall if they have a copy."}
    ]},
   {id:"prayer",
+   study:"cg_prayer",studyTitle:"Prayer Belongs to God Alone",
    tag:"Worship",
    col:"#1A237E",
    title:"Prayer to Jesus Is Forbidden",
@@ -8581,6 +8589,18 @@ function DossierSheet(props){
             );
           })
         ),
+        d.study&&ce("button",{onClick:function(){props.onStudy&&props.onStudy(d.study);},
+          style:{width:"calc(100% - 32px)",margin:"4px 16px 12px",textAlign:"left",padding:"12px 14px",
+            background:T.ac,border:"1px solid "+T.border,borderRadius:11,display:"flex",
+            alignItems:"center",justifyContent:"space-between",cursor:"pointer"}},
+          ce("div",null,
+            ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.dim,fontSize:".58rem",
+              fontWeight:600,letterSpacing:".14em",textTransform:"uppercase",marginBottom:3}},
+              "Full study"),
+            ce("p",{style:{fontFamily:"'Playfair Display',serif",color:T.text,fontWeight:700,
+              fontSize:".88rem"}},d.studyTitle)),
+          ce("span",{style:{color:T.gold,fontSize:".9rem"}},"\u2192")
+        ),
         ce("p",{style:{padding:"14px 16px 0",fontSize:".62rem",color:T.dim,
           fontFamily:"'DM Sans',sans-serif",lineHeight:1.5,textAlign:"center"}},
           "Verify sources at wol.jw.org before citing in conversation.")
@@ -8644,7 +8664,7 @@ function QuotesTab(props){
         );
       })
     ),
-    openDossier&&ce(DossierSheet,{T:T,dossier:openDossier,savedQuotes:props.savedQuotes,onToggleSavedQuote:props.onToggleSavedQuote,onClose:function(){setOpenDossier(null);}})
+    openDossier&&ce(DossierSheet,{T:T,dossier:openDossier,savedQuotes:props.savedQuotes,onToggleSavedQuote:props.onToggleSavedQuote,onStudy:props.onStudy,onClose:function(){setOpenDossier(null);}})
   );
 }
 
@@ -10204,7 +10224,14 @@ function App(){
           }})
       :ce(EvidenceLockerTab,{T:T,onOpen:setKnockOpen});
   }else if(tab==="quotes"){
-    mainContent=ce(QuotesTab,{T:T,savedQuotes:savedQuotes,onToggleSavedQuote:requestSavedQuote});
+    mainContent=ce(QuotesTab,{T:T,savedQuotes:savedQuotes,onToggleSavedQuote:requestSavedQuote,
+      onStudy:function(studyId){
+        var targetSec=null,targetStudy=null;
+        SECTIONS.forEach(function(s){
+          s.studies.forEach(function(st){if(st.id===studyId){targetSec=s;targetStudy=st;}});
+        });
+        if(targetSec&&targetStudy){setTab("library");openStudy(targetSec,targetStudy);}
+      }});
   }else if(tab==="journal"){
     mainContent=ce(JournalTab,{T:T,journal:journal,onSave:setJournal,
       myStudies:myStudies,onDeleteMyStudy:deleteMyStudy,
