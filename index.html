@@ -7586,6 +7586,27 @@ function SettingsTab(props){
   var _k=us(props.apiKey),k=_k[0],setK=_k[1];
   var _show=us(false),show=_show[0],setShow=_show[1];
   var ready=k.trim().length>10;
+  var fileInputRef=ur(null);
+  var counts=props.dataCounts||{studies:0,contacts:0,notes:0,myStudies:0};
+  var hasAnything=counts.studies+counts.contacts+counts.notes+counts.myStudies>0;
+  var countParts=[];
+  if(counts.studies>0)countParts.push(counts.studies+" saved");
+  if(counts.notes>0)countParts.push(counts.notes+" notes");
+  if(counts.contacts>0)countParts.push(counts.contacts+" contacts");
+  if(counts.myStudies>0)countParts.push(counts.myStudies+" custom studies");
+  function handleFileChange(e){
+    var file=e.target.files&&e.target.files[0];
+    if(!file)return;
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      var data;
+      try{data=JSON.parse(ev.target.result);}
+      catch(err){alert("Couldn't read that file \u2014 make sure it's a When Truth Knocks backup (.json).");return;}
+      props.onImport(data);
+    };
+    reader.readAsText(file);
+    e.target.value="";
+  }
   return ce("div",{style:{minHeight:"100vh",background:T.bg,paddingBottom:72}},
     ce("div",{style:{padding:"48px 18px 14px",borderBottom:"1px solid "+T.border}},
       ce("h1",{style:{fontFamily:"'Playfair Display',serif",color:T.text,fontSize:"1.85rem",
@@ -7606,6 +7627,30 @@ function SettingsTab(props){
           style:{padding:"7px 16px",borderRadius:18,background:T.gold,border:"none",
             color:T.isDark?"#04182e":"#fff",fontFamily:"'DM Sans',sans-serif",fontSize:".78rem",
             fontWeight:600}},props.isDark?"\u2600\ufe0f Light":"\u263d Dark")
+      ),
+
+      ce("div",{style:{padding:"15px 16px",background:T.bg2,borderRadius:12,
+        border:"1px solid "+T.border,marginBottom:14}},
+        ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.text,fontSize:".9rem",
+          fontWeight:500,marginBottom:4}},"Your data"),
+        ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.dim,fontSize:".78rem",
+          fontWeight:300,lineHeight:1.55,marginBottom:countParts.length?6:12}},
+          "Everything you save or note lives only in this browser. Download a backup before switching phones or clearing your data, then restore it here afterward."),
+        countParts.length>0&&ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.teal,
+          fontSize:".72rem",fontWeight:500,marginBottom:12}},countParts.join(" \u00b7 ")),
+        ce("button",{onClick:props.onExport,disabled:!hasAnything,
+          style:{width:"100%",padding:"11px",borderRadius:11,marginBottom:9,
+            background:hasAnything?T.gold:"transparent",border:"1px solid "+(hasAnything?T.gold:T.border),
+            color:hasAnything?(T.isDark?"#04182e":"#fff"):T.dim,fontFamily:"'DM Sans',sans-serif",
+            fontSize:".85rem",fontWeight:600,cursor:hasAnything?"pointer":"default"}},
+          "Download backup"),
+        ce("button",{onClick:function(){fileInputRef.current&&fileInputRef.current.click();},
+          style:{width:"100%",padding:"11px",borderRadius:11,background:"transparent",
+            border:"1px solid "+T.border,color:T.text,fontFamily:"'DM Sans',sans-serif",
+            fontSize:".85rem",fontWeight:600,cursor:"pointer"}},
+          "Restore from backup"),
+        ce("input",{type:"file",accept:".json,application/json",ref:fileInputRef,
+          style:{display:"none"},onChange:handleFileChange})
       ),
 
       ce("div",{style:{padding:"15px 16px",background:T.bg2,borderRadius:12,
@@ -8860,7 +8905,7 @@ function StorageNotice(props){
         lineHeight:1.55,margin:"0 0 12px"}},
         "There's no account or server — everything you save or note is kept only in this browser. "+
         "Clearing your browsing data, switching browsers, or using a different device will lose it. "+
-        "Nothing is uploaded anywhere."),
+        "Nothing is uploaded anywhere. You can back it up any time from Settings → Your data."),
       ce("button",{onClick:props.onDismiss,
         style:{width:"100%",padding:"9px",background:T.ac,border:"1px solid "+T.border,
           borderRadius:9,color:T.gold,fontFamily:"'DM Sans',sans-serif",fontSize:".82rem",
@@ -10271,6 +10316,44 @@ function App(){
   ue(function(){
     try{localStorage.setItem("wtk_points_by_study",JSON.stringify(pointsByStudy));}catch(e){}
   },[pointsByStudy]);
+
+  function exportData(){
+    var payload={
+      wtkExport:1,exportedAt:new Date().toISOString(),
+      journal:journal,myStudies:myStudies,
+      savedStudies:Array.from(savedStudies),savedCards:Array.from(savedCards),
+      savedKnocks:Array.from(savedKnocks),savedWords:Array.from(savedWords),
+      savedQuotes:Array.from(savedQuotes),savedAssignments:savedAssignments,
+      notesByStudy:notesByStudy,pointsByStudy:pointsByStudy
+    };
+    var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement("a");
+    a.href=url;
+    a.download="wtk-backup-"+new Date().toISOString().slice(0,10)+".json";
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function importData(data){
+    if(!data||typeof data!=="object"||!("wtkExport" in data)){
+      alert("This doesn't look like a When Truth Knocks backup file.");
+      return false;
+    }
+    if(!confirm("This will replace everything currently saved in this browser with the contents of this file. Continue?"))return false;
+    if(data.journal)setJournal(data.journal);
+    if(Array.isArray(data.myStudies))setMyStudies(data.myStudies);
+    setSavedStudies(new Set(Array.isArray(data.savedStudies)?data.savedStudies:[]));
+    setSavedCards(new Set(Array.isArray(data.savedCards)?data.savedCards:[]));
+    setSavedKnocks(new Set(Array.isArray(data.savedKnocks)?data.savedKnocks:[]));
+    setSavedWords(new Set(Array.isArray(data.savedWords)?data.savedWords:[]));
+    setSavedQuotes(new Set(Array.isArray(data.savedQuotes)?data.savedQuotes:[]));
+    setSavedAssignments(data.savedAssignments||{});
+    setNotesByStudy(data.notesByStudy||{});
+    setPointsByStudy(data.pointsByStudy||{});
+    return true;
+  }
+
   var _notesOpenFor=us(null),notesOpenFor=_notesOpenFor[0],setNotesOpenFor=_notesOpenFor[1];
   var _wordOpen=us(null),wordOpen=_wordOpen[0],setWordOpen=_wordOpen[1];
   var _lens=us(null),lens=_lens[0],setLens=_lens[1];
@@ -10466,7 +10549,14 @@ function App(){
       :ce(WordsTab,{T:T,savedWords:savedWords,onToggleSaved:requestSavedWord,onOpen:function(w){setWordOpen(w);}});
   }else{
     mainContent=ce(SettingsTab,{T:T,apiKey:apiKey,isDark:isDark,
-      onSaveKey:setApiKey,onToggleDark:function(){setIsDark(function(p){return !p;});}});
+      onSaveKey:setApiKey,onToggleDark:function(){setIsDark(function(p){return !p;});},
+      onExport:exportData,onImport:importData,
+      dataCounts:{
+        studies:savedStudies.size+savedCards.size+savedKnocks.size+savedWords.size+savedQuotes.size,
+        contacts:journal.contacts.length,
+        notes:Object.keys(notesByStudy).filter(function(k){return (notesByStudy[k]||"").trim().length>0;}).length,
+        myStudies:myStudies.length
+      }});
   }
 
   var notesStudyMeta=null;
