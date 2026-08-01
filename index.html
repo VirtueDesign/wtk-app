@@ -8846,6 +8846,29 @@ function SavePromptModal(props){
   );
 }
 
+/* ═══ First-visit storage notice ═══ */
+function StorageNotice(props){
+  var T=props.T;
+  return ce("div",{style:{position:"fixed",left:"50%",transform:"translateX(-50%)",
+    bottom:"calc(66px + env(safe-area-inset-bottom,0px))",width:"100%",maxWidth:430,
+    padding:"0 12px",zIndex:150}},
+    ce("div",{style:{background:T.bg2,border:"1px solid "+T.border,borderRadius:14,
+      padding:"14px 15px",boxShadow:"0 8px 28px rgba(0,0,0,.28)"}},
+      ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.text,fontSize:".82rem",
+        fontWeight:600,margin:"0 0 4px"}},"Saved studies stay on this device"),
+      ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.dim,fontSize:".78rem",
+        lineHeight:1.55,margin:"0 0 12px"}},
+        "There's no account or server — everything you save or note is kept only in this browser. "+
+        "Clearing your browsing data, switching browsers, or using a different device will lose it. "+
+        "Nothing is uploaded anywhere."),
+      ce("button",{onClick:props.onDismiss,
+        style:{width:"100%",padding:"9px",background:T.ac,border:"1px solid "+T.border,
+          borderRadius:9,color:T.gold,fontFamily:"'DM Sans',sans-serif",fontSize:".82rem",
+          fontWeight:600,cursor:"pointer"}},"Got it")
+    )
+  );
+}
+
 /* ═══ Tab bar ═══ */
 function TabBar(props){
   var T=props.T;
@@ -10206,15 +10229,48 @@ function App(){
   var _cardOpen=us(null),cardOpen=_cardOpen[0],setCardOpen=_cardOpen[1];
   var _knockOpen=us(null),knockOpen=_knockOpen[0],setKnockOpen=_knockOpen[1];
   var _apiKey=us(""),apiKey=_apiKey[0],setApiKey=_apiKey[1];
-  var _savedStudies=us(new Set()),savedStudies=_savedStudies[0],setSavedStudies=_savedStudies[1];
-  var _savedCards=us(new Set()),savedCards=_savedCards[0],setSavedCards=_savedCards[1];
-  var _savedKnocks=us(new Set()),savedKnocks=_savedKnocks[0],setSavedKnocks=_savedKnocks[1];
-  var _savedWords=us(new Set()),savedWords=_savedWords[0],setSavedWords=_savedWords[1];
-  var _savedQuotes=us(new Set()),savedQuotes=_savedQuotes[0],setSavedQuotes=_savedQuotes[1];
-  var _savedAssignments=us({}),savedAssignments=_savedAssignments[0],setSavedAssignments=_savedAssignments[1];
+  function loadSavedSet(key){
+    try{var a=JSON.parse(localStorage.getItem(key)||"null");return new Set(Array.isArray(a)?a:[]);}
+    catch(e){return new Set();}
+  }
+  function loadSavedObj(key){
+    try{return JSON.parse(localStorage.getItem(key)||"null")||{};}
+    catch(e){return{};}
+  }
+  var _savedStudies=us(function(){return loadSavedSet("wtk_saved_studies");}),savedStudies=_savedStudies[0],setSavedStudies=_savedStudies[1];
+  var _savedCards=us(function(){return loadSavedSet("wtk_saved_cards");}),savedCards=_savedCards[0],setSavedCards=_savedCards[1];
+  var _savedKnocks=us(function(){return loadSavedSet("wtk_saved_knocks");}),savedKnocks=_savedKnocks[0],setSavedKnocks=_savedKnocks[1];
+  var _savedWords=us(function(){return loadSavedSet("wtk_saved_words");}),savedWords=_savedWords[0],setSavedWords=_savedWords[1];
+  var _savedQuotes=us(function(){return loadSavedSet("wtk_saved_quotes");}),savedQuotes=_savedQuotes[0],setSavedQuotes=_savedQuotes[1];
+  var _savedAssignments=us(function(){return loadSavedObj("wtk_saved_assignments");}),savedAssignments=_savedAssignments[0],setSavedAssignments=_savedAssignments[1];
   var _pendingSave=us(null),pendingSave=_pendingSave[0],setPendingSave=_pendingSave[1];
-  var _notesByStudy=us({}),notesByStudy=_notesByStudy[0],setNotesByStudy=_notesByStudy[1];
-  var _pointsByStudy=us({}),pointsByStudy=_pointsByStudy[0],setPointsByStudy=_pointsByStudy[1];
+  var _notesByStudy=us(function(){return loadSavedObj("wtk_notes_by_study");}),notesByStudy=_notesByStudy[0],setNotesByStudy=_notesByStudy[1];
+  var _pointsByStudy=us(function(){return loadSavedObj("wtk_points_by_study");}),pointsByStudy=_pointsByStudy[0],setPointsByStudy=_pointsByStudy[1];
+
+  ue(function(){
+    try{localStorage.setItem("wtk_saved_studies",JSON.stringify(Array.from(savedStudies)));}catch(e){}
+  },[savedStudies]);
+  ue(function(){
+    try{localStorage.setItem("wtk_saved_cards",JSON.stringify(Array.from(savedCards)));}catch(e){}
+  },[savedCards]);
+  ue(function(){
+    try{localStorage.setItem("wtk_saved_knocks",JSON.stringify(Array.from(savedKnocks)));}catch(e){}
+  },[savedKnocks]);
+  ue(function(){
+    try{localStorage.setItem("wtk_saved_words",JSON.stringify(Array.from(savedWords)));}catch(e){}
+  },[savedWords]);
+  ue(function(){
+    try{localStorage.setItem("wtk_saved_quotes",JSON.stringify(Array.from(savedQuotes)));}catch(e){}
+  },[savedQuotes]);
+  ue(function(){
+    try{localStorage.setItem("wtk_saved_assignments",JSON.stringify(savedAssignments));}catch(e){}
+  },[savedAssignments]);
+  ue(function(){
+    try{localStorage.setItem("wtk_notes_by_study",JSON.stringify(notesByStudy));}catch(e){}
+  },[notesByStudy]);
+  ue(function(){
+    try{localStorage.setItem("wtk_points_by_study",JSON.stringify(pointsByStudy));}catch(e){}
+  },[pointsByStudy]);
   var _notesOpenFor=us(null),notesOpenFor=_notesOpenFor[0],setNotesOpenFor=_notesOpenFor[1];
   var _wordOpen=us(null),wordOpen=_wordOpen[0],setWordOpen=_wordOpen[1];
   var _lens=us(null),lens=_lens[0],setLens=_lens[1];
@@ -10222,6 +10278,13 @@ function App(){
   var _showIntro=us(true),showIntro=_showIntro[0],setShowIntro=_showIntro[1];
   var _introReplay=us(false),introReplay=_introReplay[0],setIntroReplay=_introReplay[1];
   var _doorstepOpen=us(false),doorstepOpen=_doorstepOpen[0],setDoorstepOpen=_doorstepOpen[1];
+  var _showStorageNotice=us(function(){
+    try{return !localStorage.getItem("wtk_seen_storage_notice");}catch(e){return false;}
+  }),showStorageNotice=_showStorageNotice[0],setShowStorageNotice=_showStorageNotice[1];
+  function dismissStorageNotice(){
+    setShowStorageNotice(false);
+    try{localStorage.setItem("wtk_seen_storage_notice","1");}catch(e){}
+  }
   var _journal=us(function(){
     try{return JSON.parse(localStorage.getItem("wtk_journal")||"null")||{contacts:[]};}
     catch(e){return{contacts:[]};}
@@ -10453,7 +10516,8 @@ function App(){
       onClose:function(){setNotesOpenFor(null);}}),
 
     introReplay&&ce(IntroSplash,{study:"identity",orientation:"portrait",
-      onDone:function(){setIntroReplay(false);}})
+      onDone:function(){setIntroReplay(false);}}),
+    showStorageNotice&&ce(StorageNotice,{T:T,onDismiss:dismissStorageNotice})
   );
 }
 
