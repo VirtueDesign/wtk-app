@@ -5644,15 +5644,16 @@ function SectionView(props){
           color:!filter?sc.col:T.dim}},"All"),
       typesPresent.map(function(k){
         var at=ARG_TYPES[k];
+        var atc=argTint(T,at.col);
         var on=filter===k;
         return ce("button",{key:k,onClick:function(){setFilter(on?null:k);},
           title:at.hint,
           style:{fontFamily:"'DM Sans',sans-serif",fontSize:".68rem",fontWeight:500,
             padding:"5px 10px",borderRadius:12,cursor:"pointer",
             display:"flex",alignItems:"center",gap:4,
-            background:on?sc.col+"22":"transparent",
-            border:"1px solid "+(on?sc.col:T.border),
-            color:on?sc.col:T.dim}},
+            background:on?atc[0]+"22":"transparent",
+            border:"1px solid "+(on?atc[0]:T.border),
+            color:on?atc[0]:T.dim}},
           ce("span",null,at.icon)," "+at.short);
       })
     ),
@@ -6784,15 +6785,26 @@ function NWTTableView(props){
    kinds of evidence. This tags which kind, so a reader can pick the
    kind they want (or need) for the conversation in front of them. */
 var ARG_TYPES={
-  direct: {label:"Direct Quotation",short:"Direct",icon:"❝",
+  direct: {label:"Direct Quotation",short:"Direct",icon:"❝",col:"gold",
     hint:"The claim is stated in so many words — one text says it plainly."},
-  grammar:{label:"Grammar & Language",short:"Grammar",icon:"Ω",
+  grammar:{label:"Grammar & Language",short:"Grammar",icon:"Ω",col:"blue",
     hint:"Turns on the Greek or Hebrew itself — an article, a tense, a word choice."},
-  pattern:{label:"Pattern & Type",short:"Pattern",icon:"◈",
+  pattern:{label:"Pattern & Type",short:"Pattern",icon:"◈",col:"purple",
     hint:"A cumulative case built from a shape or echo repeated across Scripture."},
-  history:{label:"Historical Record",short:"History",icon:"▤",
+  history:{label:"Historical Record",short:"History",icon:"▤",col:"teal",
     hint:"Rests on documented history — manuscripts, dates, or the organisation's own past statements."}
 };
+/* Shared tint lookup — same palette the Diagrams & Tables matrix cards use,
+   so an argument-type color means the same thing everywhere in the app. */
+function argTint(T,colKey){
+  var map={
+    gold:  [T.gold,   T.isDark?"rgba(197,160,109,.14)":"rgba(122,90,32,.09)"],
+    blue:  [T.blue,   T.isDark?"rgba(138,176,232,.14)":"rgba(30,58,110,.09)"],
+    purple:[T.purple, T.isDark?"rgba(184,160,196,.14)":"rgba(90,58,122,.09)"],
+    teal:  [T.teal,   T.isDark?"rgba(90,184,174,.14)":"rgba(23,99,91,.09)"]
+  };
+  return map[colKey]||map.gold;
+}
 /* Rough reading time from a study's own section text, so a card can show
    "~4 min" before anyone opens it. Counts words in text/note/callout/pull
    fields at ~200 wpm, floor of 1 minute. */
@@ -6813,12 +6825,13 @@ function StudyMetaBadges(props){
   var T=props.T,study=props.study,compact=props.compact;
   var mins=studyReadMins(study.id);
   var at=study.argType&&study.argType.length?ARG_TYPES[study.argType[0]]:null;
+  var atc=at?argTint(T,at.col):null;
   if(!mins&&!at)return null;
   return ce("div",{style:{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",
     marginTop:compact?4:0,marginBottom:compact?0:2}},
     at&&ce("span",{title:at.hint,style:{display:"inline-flex",alignItems:"center",gap:3,
-      fontFamily:"'DM Sans',sans-serif",fontSize:".6rem",fontWeight:500,color:T.dim,
-      background:T.isDark?"rgba(255,255,255,.05)":"rgba(0,0,0,.045)",
+      fontFamily:"'DM Sans',sans-serif",fontSize:".6rem",fontWeight:600,color:atc[0],
+      background:atc[1],border:"1px solid "+atc[0]+"38",
       borderRadius:8,padding:"2px 7px 2px 6px",lineHeight:1.5}},
       ce("span",{style:{fontSize:".68rem"}},at.icon)," "+at.short),
     mins&&ce("span",{style:{fontFamily:"'DM Sans',sans-serif",fontSize:".6rem",fontWeight:500,
