@@ -6981,6 +6981,47 @@ function argTint(T,colKey){
   };
   return map[colKey]||map.gold;
 }
+/* Guided Paths — a fixed sequence of existing studies, ordered for a live
+   conversation rather than by topic. Each step carries the one question
+   worth asking before moving on. onOpenStudy reuses the normal StudyDetail
+   view; GuidedPathBar (below) adds the progress/question/nav chrome. */
+var GUIDED_PATHS=[
+  {id:"jesusisjehovah",title:"Is Jesus Jehovah?",icon:"👑",
+   tagline:"A step-by-step walk through the evidence — built to hold a real conversation, not just read alone.",
+   steps:[
+     {studyId:"angel",stage:"Stage 1 · Establish the Pattern",
+      question:"Who is this figure the text calls both “the Angel” and “Jehovah” in the same breath — and why does he accept worship no angel is allowed to take?"},
+     {studyId:"king",stage:"Stage 2 · One Clean Transfer",
+      question:"Isaiah says he saw Jehovah’s glory. John says he saw Jesus’. How do you hold both verses open at the same time?"},
+     {studyId:"lordofhosts",stage:"Stage 3 · Not a Coincidence",
+      question:"Isaiah says Jehovah of armies is the one to regard as holy — the stone people trip over. Paul and Peter say that stone is Jesus. What does that make Jesus?"},
+     {studyId:"holyone",stage:"Stage 3 · Not a Coincidence",
+      question:"Isaiah calls Jehovah “the Holy One of Israel” twenty-five times — his signature title. Why do a demon, Peter, and the risen Jesus himself all put that same title on Jesus?"},
+     {studyId:"shema",stage:"Stage 4 · The Nature Question",
+      question:"The Shema says Jehovah is one. Where does that leave the Lord Paul lists right alongside him, in the very next breath, in 1 Corinthians 8:6?"},
+     {studyId:"alonecreator",stage:"Stage 5 · The Systematic Case",
+      question:"Jehovah says he stretched out the heavens by himself — alone, with no one beside him. So who was Jesus, if he was there too?"},
+     {studyId:"attributes",stage:"Stage 5 · The Systematic Case",
+      question:"If forgiving sin, being everywhere at once, and receiving worship each belong to God alone — why does Jesus do all three, and never once get corrected for it?"},
+     {studyId:"hotheos",stage:"Stage 5 · The Systematic Case",
+      question:"“Ho theos” — “the God,” with the article — is the Septuagint’s own name-tag for Jehovah alone. Why do Hebrews, John, and Paul all reach for it when they talk about Jesus?"},
+     {studyId:"hands",stage:"Stage 5 · The Systematic Case",
+      question:"Honours, Attributes, Names, Deeds, Seat — Jehovah alone holds all five in the Old Testament. Why does the New Testament give all five to Jesus too?"},
+     {studyId:"almighty",stage:"Stage 5 · The Systematic Case",
+      question:"Jehovah calls himself the Almighty in Isaiah. Jesus calls himself the Almighty in Revelation. Is that a title he was given, or one he already had?"},
+     {studyId:"thatday",stage:"Stage 6 · The Climax",
+      question:"In the prophets, “that day” always means the day Jehovah appears as judge. In the Gospels, Jesus is the one everyone stands before on “that day.” Who’s judging?"},
+     {studyId:"cloudrider",stage:"Stage 6 · The Climax",
+      question:"Riding the clouds belongs to Jehovah alone throughout the Old Testament. Why does Daniel show someone else doing it too — and receiving a kingdom that never ends?"}
+   ]}
+];
+function findStudyById(studyId){
+  var found={sec:null,study:null};
+  SECTIONS.forEach(function(s){s.studies.forEach(function(st){
+    if(st.id===studyId){found.sec=s;found.study=st;}
+  });});
+  return found;
+}
 /* Rough reading time from a study's own section text, so a card can show
    "~4 min" before anyone opens it. Counts words in text/note/callout/pull
    fields at ~200 wpm, floor of 1 minute. */
@@ -7850,6 +7891,96 @@ function DialogueThread(props){
   );
 }
 
+/* ═══ Guided Path — fixed sequence of studies with a question between each step ═══
+   Rendered inside StudyDetail when props.pathCtx is set: {path, stepIndex}. */
+function GuidedPathBar(props){
+  var T=props.T,col=props.col,path=props.pathCtx.path,stepIndex=props.pathCtx.stepIndex;
+  var step=path.steps[stepIndex];
+  var total=path.steps.length;
+  var isLast=stepIndex===total-1;
+  return ce(React.Fragment,null,
+    ce("div",{style:{margin:"14px 14px 0",padding:"10px 13px",borderRadius:12,
+      background:col+"12",border:"1px solid "+col+"38",
+      display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}},
+      ce("div",{style:{minWidth:0}},
+        ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:col,fontSize:".58rem",fontWeight:700,
+          letterSpacing:".12em",textTransform:"uppercase",margin:"0 0 2px"}},
+          "Step "+(stepIndex+1)+" of "+total+" · "+path.title),
+        ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.dim,fontSize:".68rem",fontWeight:500,
+          margin:0}},step.stage)
+      ),
+      ce("button",{onClick:props.onExit,title:"Exit guided path",
+        style:{flexShrink:0,background:"none",border:"none",color:T.dim,fontSize:"1rem",
+          padding:"2px 4px",cursor:"pointer"}},"×")
+    ),
+    ce("div",{style:{margin:"7px 14px 0",height:4,borderRadius:4,
+      background:T.isDark?"rgba(255,255,255,.08)":"rgba(0,0,0,.08)",overflow:"hidden"}},
+      ce("div",{style:{height:"100%",borderRadius:4,width:Math.round((stepIndex+1)/total*100)+"%",
+        background:col,transition:"width .3s ease"}})
+    ),
+    ce("div",{style:{margin:"12px 14px 0",padding:"14px 15px",borderRadius:12,
+      background:T.bg2,border:"1px solid "+col+"50",borderLeft:"3px solid "+col}},
+      ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:col,fontSize:".58rem",fontWeight:700,
+        letterSpacing:".12em",textTransform:"uppercase",margin:"0 0 7px"}},"💬 Ask this"),
+      ce("p",{style:{fontFamily:"'Playfair Display',serif",fontStyle:"italic",color:T.text,
+        fontSize:".98rem",lineHeight:1.68,margin:0}},step.question)
+    ),
+    ce("div",{style:{margin:"12px 14px 0",display:"flex",gap:8}},
+      stepIndex>0&&ce("button",{onClick:function(){props.onStep(stepIndex-1);},
+        style:{flex:1,fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:".78rem",
+          padding:"11px 12px",borderRadius:12,border:"1px solid "+T.border,
+          background:T.bg2,color:T.text,cursor:"pointer"}},"‹ Previous step"),
+      ce("button",{onClick:function(){isLast?props.onExit():props.onStep(stepIndex+1);},
+        style:{flex:1,fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:".78rem",
+          padding:"11px 12px",borderRadius:12,border:"none",
+          background:col,color:T.isDark?"#04182e":"#fff",cursor:"pointer"}},
+        isLast?"Finish path ✓":"Next step ›")
+    )
+  );
+}
+
+/* Hub screen: lists available guided paths, launched from Library Home. */
+function GuidedPathHub(props){
+  var T=props.T;
+  return ce("div",{style:{minHeight:"100vh",background:T.bg,paddingBottom:72}},
+    ce("div",{style:{padding:"48px 18px 14px",borderBottom:"1px solid "+T.border,
+      display:"flex",alignItems:"center",gap:10}},
+      ce("button",{onClick:props.onBack,style:{background:"none",border:"none",color:T.dim,
+        fontSize:".82rem",padding:0,fontFamily:"'DM Sans',sans-serif"}},"←"),
+      ce("h1",{style:{fontFamily:"'Playfair Display',serif",color:T.text,fontSize:"1.5rem",
+        fontWeight:700,margin:0}},"Guided Paths")
+    ),
+    ce("div",{style:{padding:"16px 14px"}},
+      ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.dim,fontSize:".82rem",fontWeight:300,
+        lineHeight:1.6,marginBottom:16}},
+        "A fixed order through studies you already have — built to hold a real conversation, with one question to ask before you move to the next step."),
+      GUIDED_PATHS.map(function(path){
+        var sc=T.sections.glory||{col:T.gold};
+        var col=sc.col;
+        var done=props.pathProgress[path.id]||0;
+        return ce("button",{key:path.id,onClick:function(){props.onStart(path.id);},
+          style:{width:"100%",textAlign:"left",background:T.bg2,borderRadius:14,
+            border:"1px solid "+T.border,borderLeft:"4px solid "+col,
+            padding:"15px 16px",marginBottom:10,cursor:"pointer"}},
+          ce("div",{style:{display:"flex",alignItems:"center",gap:8,marginBottom:6}},
+            ce("span",{style:{fontSize:"1.1rem"}},path.icon),
+            ce("p",{style:{fontFamily:"'Playfair Display',serif",color:T.text,fontSize:"1.08rem",
+              fontWeight:700,margin:0}},path.title)
+          ),
+          ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.dim,fontSize:".8rem",fontWeight:300,
+            lineHeight:1.55,marginBottom:9}},path.tagline),
+          ce("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between"}},
+            ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:col,fontSize:".72rem",fontWeight:600,
+              margin:0}},path.steps.length+" steps"),
+            ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.dim,fontSize:".72rem",
+              fontWeight:500,margin:0}},done>0?(done>=path.steps.length-1?"Completed ✓":"Resume · step "+(done+1)):"Start →")
+          )
+        );
+      })
+    )
+  );
+}
+
 function StudyDetail(props){
   var T=props.T,study=props.study,sec=props.sec;
   var sc=T.sections[sec.id]||{col:T.gold};
@@ -8005,6 +8136,10 @@ function StudyDetail(props){
           fontWeight:400,marginBottom:6}},study.ref),
         ce(StudyMetaBadges,{T:T,study:study})
       ),
+
+      props.pathCtx&&ce(GuidedPathBar,{T:T,col:col,pathCtx:props.pathCtx,
+        onStep:function(i){props.onPathStep(props.pathCtx.path.id,i);},
+        onExit:props.onExitPath}),
 
       ce("div",{onClick:hasIntroFilm?function(){setVideoOpen(true);}:null,
         style:{margin:"14px 14px 0",borderRadius:14,overflow:"hidden",border:"1px solid "+T.border,
@@ -10705,6 +10840,23 @@ function LibraryHome(props){
       )
     ),
 
+    ce("div",{style:{padding:"12px 13px 0"}},
+      ce("button",{onClick:props.onOpenPaths,
+        style:{width:"100%",textAlign:"left",display:"flex",alignItems:"center",gap:10,
+          padding:"12px 14px",borderRadius:14,cursor:"pointer",
+          background:T.isDark?"rgba(197,160,109,.10)":"rgba(122,90,32,.07)",
+          border:"1px solid "+(T.isDark?"rgba(197,160,109,.3)":"rgba(122,90,32,.25)")}},
+        ce("span",{style:{fontSize:"1.25rem"}},"🧭"),
+        ce("div",{style:{flex:1,minWidth:0}},
+          ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.gold,fontSize:".58rem",fontWeight:700,
+            letterSpacing:".12em",textTransform:"uppercase",margin:"0 0 2px"}},"Guided Paths"),
+          ce("p",{style:{fontFamily:"'Playfair Display',serif",color:T.text,fontSize:".92rem",
+            fontWeight:700,margin:0}},"Step-by-step, with a question between each")
+        ),
+        ce("span",{style:{color:T.gold,fontSize:"1rem",flexShrink:0}},"→")
+      )
+    ),
+
     ce("div",{style:{overflowX:"auto",display:"flex",gap:7,
       padding:"10px 13px",borderBottom:"1px solid "+T.border,
       WebkitOverflowScrolling:"touch",scrollbarWidth:"none"}},
@@ -12085,6 +12237,7 @@ function App(){
   var _pendingSave=us(null),pendingSave=_pendingSave[0],setPendingSave=_pendingSave[1];
   var _notesByStudy=us(function(){return loadSavedObj("wtk_notes_by_study");}),notesByStudy=_notesByStudy[0],setNotesByStudy=_notesByStudy[1];
   var _pointsByStudy=us(function(){return loadSavedObj("wtk_points_by_study");}),pointsByStudy=_pointsByStudy[0],setPointsByStudy=_pointsByStudy[1];
+  var _pathProgress=us(function(){return loadSavedObj("wtk_path_progress");}),pathProgress=_pathProgress[0],setPathProgress=_pathProgress[1];
 
   ue(function(){
     try{localStorage.setItem("wtk_saved_studies",JSON.stringify(Array.from(savedStudies)));}catch(e){}
@@ -12110,6 +12263,9 @@ function App(){
   ue(function(){
     try{localStorage.setItem("wtk_points_by_study",JSON.stringify(pointsByStudy));}catch(e){}
   },[pointsByStudy]);
+  ue(function(){
+    try{localStorage.setItem("wtk_path_progress",JSON.stringify(pathProgress));}catch(e){}
+  },[pathProgress]);
 
   function buildBackupPayload(){
     return {
@@ -12279,6 +12435,21 @@ function App(){
   function openSection(sec){setLibView({mode:"section",sec:sec});}
   function backToHome(){setLibView({mode:"home"});}
   function backToSection(){setLibView({mode:"section",sec:libView.sec});}
+  function openPathHub(){setLibView({mode:"pathhub"});}
+  function exitPath(){setLibView({mode:"pathhub"});}
+  function openPathStep(pathId,stepIndex){
+    var path=GUIDED_PATHS.filter(function(p){return p.id===pathId;})[0];
+    if(!path)return;
+    var step=path.steps[stepIndex];
+    var found=findStudyById(step.studyId);
+    if(!found.study)return;
+    setLibView({mode:"study",sec:found.sec,study:found.study,pathCtx:{path:path,stepIndex:stepIndex}});
+    setPathProgress(function(p){
+      var n=Object.assign({},p);
+      n[pathId]=Math.max(n[pathId]||0,stepIndex);
+      return n;
+    });
+  }
 
   var savedTotal=savedStudies.size+savedCards.size+savedKnocks.size+savedWords.size+savedQuotes.size;
 
@@ -12290,15 +12461,21 @@ function App(){
     if(libView.mode==="study"){
       mainContent=ce(StudyDetail,{T:T,study:libView.study,sec:libView.sec,apiKey:apiKey,
         savedStudies:savedStudies,notesByStudy:notesByStudy,pointsByStudy:pointsByStudy,
-        onBack:libView.sec.studies.length>1?backToSection:backToHome,
+        pathCtx:libView.pathCtx,
+        onBack:libView.pathCtx?exitPath:(libView.sec.studies.length>1?backToSection:backToHome),
         onToggleSaved:requestSavedStudy,onOpenNotes:function(id){setNotesOpenFor(id);},
         onTogglePoint:togglePoint,onLens:function(k){setLens(k);},
+        onPathStep:openPathStep,onExitPath:exitPath,
         onOpenStudy:function(sec,study){openStudy(sec,study);}});
     }else if(libView.mode==="section"){
       mainContent=ce(SectionView,{T:T,sec:libView.sec,onBack:backToHome,
         onStudy:function(s,st){openStudy(s,st);}});
+    }else if(libView.mode==="pathhub"){
+      mainContent=ce(GuidedPathHub,{T:T,onBack:backToHome,pathProgress:pathProgress,
+        onStart:function(pathId){openPathStep(pathId,Math.min(pathProgress[pathId]||0,GUIDED_PATHS.filter(function(p){return p.id===pathId;})[0].steps.length-1));}});
     }else{
       mainContent=ce(LibraryHome,{T:T,onStudy:openStudy,onSection:openSection,
+        onOpenPaths:openPathHub,
         onSearch:function(){setSearchOpen(true);},onPlayIntro:function(){setIntroReplay(true);}});
     }
   }else if(tab==="cards"){
