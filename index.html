@@ -5861,6 +5861,10 @@ function SectionView(props){
           ce("span",null,at.icon)," "+at.short);
       })
     ),
+    typesPresent.length>1&&ce(Callout,{T:T,id:"argtypefilter",col:sc.col,
+      seenCallouts:props.seenCallouts,onDismiss:props.onDismissCallout,
+      style:{margin:"9px 13px 0"},
+      text:"Filter studies by the kind of evidence they use — a direct quote, the grammar, a pattern, or the historical record."}),
     ce("div",{style:{flex:1,overflowY:"auto",padding:"12px 13px 20px",
       display:"flex",flexDirection:"column",gap:8}},
       shown.length===0&&ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.dim,
@@ -8256,6 +8260,11 @@ function StudyDetail(props){
           ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.teal,fontSize:".78rem",
             fontWeight:500,margin:0}},"You\u2019ve read through the whole study \u2014 tap Ask AI for a recap")
         ),
+        content.sections.some(function(s){return s.mirror||s.timeline||s.img||s.pairs||s.word||s.wt||s.steps||s.periGuide||s.transrows||s.feastStepper||s.typologyArc||s.matrix||s.tree||s.flow||s.flashcards||s.dialogue;})&&
+          ce(Callout,{T:T,id:"visuallayouticon",col:col,
+            seenCallouts:props.seenCallouts,onDismiss:props.onDismissCallout,
+            style:{margin:"0 0 9px"},
+            text:"This little icon means a section has a visual layout \u2014 a table, timeline, flashcards, or a talk-it-through dialogue, not just text."}),
         content.sections.map(function(s,idx){
           var on=openSec===s.id;
           var isRead=!!readSecs[s.id];
@@ -9503,6 +9512,23 @@ function SettingsTab(props){
           style:{padding:"7px 16px",borderRadius:18,background:T.gold,border:"none",
             color:T.isDark?"#04182e":"#fff",fontFamily:"'DM Sans',sans-serif",fontSize:".78rem",
             fontWeight:600}},props.isDark?"\u2600\ufe0f Light":"\u263d Dark")
+      ),
+
+      ce("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",
+        padding:"14px 15px",background:T.bg2,borderRadius:12,border:"1px solid "+T.border,
+        marginBottom:18}},
+        ce("div",null,
+          ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.text,fontSize:".9rem",
+            fontWeight:500,marginBottom:2}},"Tips"),
+          ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:T.dim,fontSize:".76rem",
+            fontWeight:300}},"Bring back the one-time \u201cGot it\u201d tips pointing out features")
+        ),
+        ce("button",{onClick:props.onResetCallouts,disabled:!props.hasSeenCallouts,
+          style:{padding:"7px 16px",borderRadius:18,
+            background:props.hasSeenCallouts?"transparent":"transparent",
+            border:"1px solid "+(props.hasSeenCallouts?T.gold:T.border),
+            color:props.hasSeenCallouts?T.gold:T.dim,fontFamily:"'DM Sans',sans-serif",fontSize:".78rem",
+            fontWeight:600,cursor:props.hasSeenCallouts?"pointer":"default"}},"Replay tips")
       ),
 
       ce("div",{style:{padding:"15px 16px",background:T.bg2,borderRadius:12,
@@ -10841,6 +10867,25 @@ function TabBar(props){
   );
 }
 
+/* ═══ Callout — a small, dismiss-once tip pointing at a feature ═══
+   Shown the first time a screen is reached; remembered in localStorage
+   via App's seenCallouts set, so it never nags a returning user. */
+function Callout(props){
+  var T=props.T,col=props.col||T.gold;
+  if(props.seenCallouts&&props.seenCallouts.has(props.id))return null;
+  return ce("div",{className:"fade-up",style:{display:"flex",alignItems:"flex-start",gap:9,
+    margin:props.style&&props.style.margin!==undefined?props.style.margin:"8px 13px 4px",
+    padding:"11px 12px",borderRadius:12,background:col+"16",border:"1px solid "+col+"4a"}},
+    ce("span",{style:{fontSize:".95rem",flexShrink:0,lineHeight:1.4}},"💡"),
+    ce("p",{style:{flex:1,fontFamily:"'DM Sans',sans-serif",color:T.text,fontSize:".78rem",
+      fontWeight:400,lineHeight:1.55,margin:0}},props.text),
+    ce("button",{onClick:function(){props.onDismiss&&props.onDismiss(props.id);},
+      style:{flexShrink:0,fontFamily:"'DM Sans',sans-serif",fontSize:".7rem",fontWeight:700,
+        color:col,background:"none",border:"none",padding:"2px 2px 2px 4px",cursor:"pointer"}},
+      "Got it")
+  );
+}
+
 /* ═══ Library home (root) ═══ */
 function LibraryHome(props){
   var T=props.T;
@@ -10891,6 +10936,9 @@ function LibraryHome(props){
         ce("span",{style:{color:T.gold,fontSize:"1rem",flexShrink:0}},"→")
       )
     ),
+
+    ce(Callout,{T:T,id:"guidedpaths",seenCallouts:props.seenCallouts,onDismiss:props.onDismissCallout,
+      text:"New: work through a topic step-by-step, with a question to ask at each stage — good for a real conversation, not just reading alone."}),
 
     ce("div",{style:{overflowX:"auto",display:"flex",gap:7,
       padding:"10px 13px",borderBottom:"1px solid "+T.border,
@@ -12273,6 +12321,7 @@ function App(){
   var _notesByStudy=us(function(){return loadSavedObj("wtk_notes_by_study");}),notesByStudy=_notesByStudy[0],setNotesByStudy=_notesByStudy[1];
   var _pointsByStudy=us(function(){return loadSavedObj("wtk_points_by_study");}),pointsByStudy=_pointsByStudy[0],setPointsByStudy=_pointsByStudy[1];
   var _pathProgress=us(function(){return loadSavedObj("wtk_path_progress");}),pathProgress=_pathProgress[0],setPathProgress=_pathProgress[1];
+  var _seenCallouts=us(function(){return loadSavedSet("wtk_seen_callouts");}),seenCallouts=_seenCallouts[0],setSeenCallouts=_seenCallouts[1];
 
   ue(function(){
     try{localStorage.setItem("wtk_saved_studies",JSON.stringify(Array.from(savedStudies)));}catch(e){}
@@ -12301,6 +12350,13 @@ function App(){
   ue(function(){
     try{localStorage.setItem("wtk_path_progress",JSON.stringify(pathProgress));}catch(e){}
   },[pathProgress]);
+  ue(function(){
+    try{localStorage.setItem("wtk_seen_callouts",JSON.stringify(Array.from(seenCallouts)));}catch(e){}
+  },[seenCallouts]);
+  function dismissCallout(id){
+    setSeenCallouts(function(p){var n=new Set(p);n.add(id);return n;});
+  }
+  function resetCallouts(){setSeenCallouts(new Set());}
 
   function buildBackupPayload(){
     return {
@@ -12497,6 +12553,7 @@ function App(){
       mainContent=ce(StudyDetail,{T:T,study:libView.study,sec:libView.sec,apiKey:apiKey,
         savedStudies:savedStudies,notesByStudy:notesByStudy,pointsByStudy:pointsByStudy,
         pathCtx:libView.pathCtx,
+        seenCallouts:seenCallouts,onDismissCallout:dismissCallout,
         onBack:libView.pathCtx?exitPath:(libView.sec.studies.length>1?backToSection:backToHome),
         onToggleSaved:requestSavedStudy,onOpenNotes:function(id){setNotesOpenFor(id);},
         onTogglePoint:togglePoint,onLens:function(k){setLens(k);},
@@ -12504,6 +12561,7 @@ function App(){
         onOpenStudy:function(sec,study){openStudy(sec,study);}});
     }else if(libView.mode==="section"){
       mainContent=ce(SectionView,{T:T,sec:libView.sec,onBack:backToHome,
+        seenCallouts:seenCallouts,onDismissCallout:dismissCallout,
         onStudy:function(s,st){openStudy(s,st);}});
     }else if(libView.mode==="pathhub"){
       mainContent=ce(GuidedPathHub,{T:T,onBack:backToHome,pathProgress:pathProgress,
@@ -12511,6 +12569,7 @@ function App(){
     }else{
       mainContent=ce(LibraryHome,{T:T,onStudy:openStudy,onSection:openSection,
         onOpenPaths:openPathHub,
+        seenCallouts:seenCallouts,onDismissCallout:dismissCallout,
         onSearch:function(){setSearchOpen(true);},onPlayIntro:function(){setIntroReplay(true);}});
     }
   }else if(tab==="cards"){
@@ -12574,6 +12633,7 @@ function App(){
     mainContent=ce(SettingsTab,{T:T,apiKey:apiKey,isDark:isDark,
       onSaveKey:setApiKey,onToggleDark:function(){setIsDark(function(p){return !p;});},
       onExport:exportData,onShare:shareBackup,onImport:importData,
+      hasSeenCallouts:seenCallouts.size>0,onResetCallouts:resetCallouts,
       dataCounts:{
         studies:savedStudies.size+savedCards.size+savedKnocks.size+savedWords.size+savedQuotes.size,
         contacts:journal.contacts.length,
