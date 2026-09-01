@@ -6592,6 +6592,13 @@ function JesusNamesView(props){
   var _q=us(""),q=_q[0],setQ=_q[1];
   var _sel=us(null),sel=_sel[0],setSel=_sel[1];
   var _chatOpen=us(false),chatOpen=_chatOpen[0],setChatOpen=_chatOpen[1];
+  var panelRef=ur(null);
+  ue(function(){
+    /* Names lower in the grid can be well below the detail panel, which
+       always renders above the grid — scroll it into view so opening a
+       name never looks like nothing happened. */
+    if(sel&&panelRef.current)panelRef.current.scrollIntoView({behavior:"smooth",block:"start"});
+  },[sel]);
 
   var lq=q.trim().toLowerCase();
   var visible=WTK_NAMES_DATA.filter(function(n){
@@ -6699,9 +6706,9 @@ function JesusNamesView(props){
       ),
 
       /* Selected name detail panel */
-      sel&&ce("div",{className:"fade-up",style:{margin:"0 14px 12px",padding:"14px 15px",
+      sel&&ce("div",{ref:panelRef,className:"fade-up",style:{margin:"0 14px 12px",padding:"14px 15px",
         borderRadius:12,background:(nameCol(T,sel.cat))+(T.isDark?"28":"18"),
-        border:"1px solid "+(nameCol(T,sel.cat))+"55"}},
+        border:"1px solid "+(nameCol(T,sel.cat))+"55",scrollMarginTop:60}},
         ce("div",{style:{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:8}},
           ce("div",{style:{flex:1}},
             ce("p",{style:{fontFamily:"'DM Sans',sans-serif",color:nameCol(T,sel.cat),
